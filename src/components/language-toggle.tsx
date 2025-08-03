@@ -2,13 +2,10 @@
 
 import * as React from "react"
 import { Button } from "@/components/ui/button"
+import { useLanguage } from "@/context/language-context"
 
 export function LanguageToggle() {
-    const [language, setLanguage] = React.useState("EN");
-
-    const toggleLanguage = () => {
-        setLanguage(prev => prev === "EN" ? "PT" : "EN");
-    }
+    const { language, toggleLanguage } = useLanguage();
 
   return (
     <Button variant="outline" size="icon" onClick={toggleLanguage}>
