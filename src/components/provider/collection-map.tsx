@@ -38,18 +38,20 @@ const GarbageStatusIcon = ({
   status,
   ...props
 }: { status: GarbageStatus } & React.ComponentProps<typeof Trash2>) => {
+  const { t } = useLanguage();
+  const iconProps = { ...props, "aria-label": t(status) };
   switch (status) {
     case "out":
-      return <Trash2 {...props} className="text-blue-500" />;
+      return <Trash2 {...iconProps} className="text-blue-500" />;
     case "collected":
-      return <Check {...props} className="text-green-500" />;
+      return <Check {...iconProps} className="text-green-500" />;
     case "missed":
-      return <XCircle {...props} className="text-red-500" />;
+      return <XCircle {...iconProps} className="text-red-500" />;
     case "not-out":
-      return <BellOff {...props} className="text-gray-500" />;
+      return <BellOff {...iconProps} className="text-gray-500" />;
     case "pending":
     default:
-      return <Hourglass {...props} className="text-yellow-500" />;
+      return <Hourglass {...iconProps} className="text-yellow-500" />;
   }
 };
 
@@ -62,7 +64,7 @@ const routeLayer: LayerProps = {
     'line-cap': 'round',
   },
   paint: {
-    'line-color': '#468499', 
+    'line-color': 'hsl(var(--primary))',
     'line-width': 4,
     'line-opacity': 0.8
   },
@@ -77,7 +79,7 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const routeGeoJSON = routeClients.length > 0 ? {
+  const routeGeoJSON = routeClients.length > 1 ? {
     type: 'Feature' as const,
     properties: {},
     geometry: {
@@ -107,7 +109,7 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
   };
   
   return (
-    <div className="h-full w-full relative">
+    <div className="h-full w-full relative rounded-lg shadow-md overflow-hidden">
       <Map
         ref={mapRef}
         initialViewState={{
@@ -116,12 +118,12 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
           zoom: 12,
         }}
         mapStyle={MAPTILER_STYLE_URL}
-        style={{ borderRadius: "0.5rem", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)"}}
+        style={{width: '100%', height: '100%'}}
         maxBounds={mozambiqueBounds}
         mapLib={import('maplibre-gl')}
       >
-        <FullscreenControl />
-        <NavigationControl />
+        <FullscreenControl position="top-right" />
+        <NavigationControl position="top-right" />
 
         {clientData.map((client) => (
           <Marker
@@ -132,14 +134,15 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
               e.originalEvent.stopPropagation();
               setPopupInfo(client);
             }}
+            anchor="bottom"
           >
-             <MapPin className="text-primary w-8 h-8 cursor-pointer" />
+             <MapPin className="text-primary w-8 h-8 cursor-pointer drop-shadow-lg" />
           </Marker>
         ))}
 
         {userLocation && (
             <Marker longitude={userLocation[1]} latitude={userLocation[0]}>
-                <UserCircle className="w-8 h-8 text-blue-500 animate-pulse" />
+                <UserCircle className="w-8 h-8 text-blue-500 animate-pulse drop-shadow-lg" />
             </Marker>
         )}
 
@@ -158,21 +161,25 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
             closeButton={false}
             className="w-64"
           >
-            <div className="p-2 space-y-2">
-                <h3 className="font-bold text-lg">{popupInfo.name}</h3>
-                <p className="text-sm text-muted-foreground">{popupInfo.address}</p>
+            <div className="p-1 space-y-2">
+                <h3 className="font-bold text-base">{popupInfo.name}</h3>
+                <p className="text-xs text-muted-foreground">{popupInfo.address}</p>
                 <div className="flex items-center gap-2">
-                <span className="text-sm">{t('status')}:</span>
-                <Badge variant="outline" className="capitalize">
+                <span className="text-xs font-medium">{t('status')}:</span>
+                <Badge variant="outline" className="capitalize text-xs">
+                    <GarbageStatusIcon status={popupInfo.garbageStatus} className="w-3 h-3 mr-1" />
                     {t(popupInfo.garbageStatus).replace("-", " ")}
                 </Badge>
-                <GarbageStatusIcon status={popupInfo.garbageStatus} />
                 </div>
-                <div className="pt-2">
+                <div className="pt-1">
                 <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setDialogClient(popupInfo)}
+                    className="h-7 text-xs"
+                    onClick={() => {
+                        setDialogClient(popupInfo);
+                        setPopupInfo(null);
+                    }}
                 >
                     {t('update_status')}
                 </Button>
@@ -185,54 +192,26 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
       <Dialog open={!!dialogClient} onOpenChange={() => setDialogClient(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('update_status')}</DialogTitle>
+            <DialogTitle>{t('update_status_for', { name: dialogClient?.name })}</DialogTitle>
             <DialogDescription>
-              {t('update_status_desc_1')}{" "}
-              <strong>{dialogClient?.name}</strong>.
+              {t('update_status_desc_1')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-2 gap-2 mt-4">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() =>
-                dialogClient &&
-                updateGarbageStatus(dialogClient.id, "collected")
-              }
-            >
-              {t('collected')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() =>
-                dialogClient &&
-                updateGarbageStatus(dialogClient.id, "missed")
-              }
-            >
-              {t('missed')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() =>
-                dialogClient &&
-                updateGarbageStatus(dialogClient.id, "not-out")
-              }
-            >
-              {t('not_out')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() =>
-                dialogClient &&
-                updateGarbageStatus(dialogClient.id, "pending")
-              }
-            >
-              {t('pending')}
-            </Button>
+            {(['collected', 'missed', 'not-out', 'pending'] as GarbageStatus[]).map(status => (
+                 <Button
+                    key={status}
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                        dialogClient &&
+                        updateGarbageStatus(dialogClient.id, status)
+                    }
+                    >
+                    {t(status)}
+                </Button>
+            ))}
           </div>
         </DialogContent>
       </Dialog>

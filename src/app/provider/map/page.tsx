@@ -35,6 +35,13 @@ export default function ProviderMapPage() {
     setRoutes(prev => [...prev, newRoute]);
   }
 
+  const handleUpdateRoute = (updatedRoute: Route) => {
+    setRoutes(prev => prev.map(r => r.id === updatedRoute.id ? updatedRoute : r));
+    if (selectedRoute?.id === updatedRoute.id) {
+        setSelectedRoute(updatedRoute);
+    }
+  }
+
   const clientsOnRoute = selectedRoute
     ? DUMMY_CLIENTS.filter(c => c.routeId === selectedRoute.id && c.sharesLocation)
     : [];
@@ -42,8 +49,8 @@ export default function ProviderMapPage() {
   const allVisibleClients = DUMMY_CLIENTS.filter(c => c.sharesLocation);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-theme(spacing.24))]">
-      <div className="flex justify-between items-center mb-4 flex-shrink-0">
+    <div className="flex flex-col h-[calc(100vh-theme(spacing.24))] overflow-hidden">
+      <div className="flex justify-between items-center mb-4 flex-shrink-0 px-1">
           <div>
               <h2 className="text-2xl font-bold">{t('map_title')}</h2>
               <p className="text-muted-foreground">{t('map_subtitle')}</p>
@@ -61,12 +68,13 @@ export default function ProviderMapPage() {
               userLocation={userLocation}
           />
         </div>
-        <div className="lg:col-span-1 h-full">
+        <div className="lg:col-span-1 h-full overflow-hidden">
            <RouteManager 
               routes={routes} 
               selectedRoute={selectedRoute}
               onSelectRoute={setSelectedRoute}
               onCreateRoute={handleCreateRoute}
+              onUpdateRoute={handleUpdateRoute}
           />
         </div>
       </div>

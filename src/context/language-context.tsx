@@ -147,11 +147,13 @@ const translations = {
         alert_geolocation_not_supported: 'Geolocation is not supported by this browser.',
         client_status_set_to: "Client's status set to",
         update_status: 'Update Status',
-        update_status_desc_1: 'Change garbage status for',
+        update_status_for: 'Update status for {{name}}',
+        update_status_desc_1: 'Change garbage status for the selected client.',
         route_manager_title: 'Route Manager',
         route_manager_subtitle: 'Define and manage collection routes.',
         create_new_route: 'Create New Route',
         edit_route: 'Edit Route',
+        edit_route_desc: 'Modify the name and collection days for this route.',
         no_routes_created: 'No routes created yet.',
         create_route_desc: 'Enter the details for your new collection route.',
         route_name: 'Route Name',
@@ -167,7 +169,7 @@ const translations = {
         next_maintenance: 'Next Maintenance',
         view_details: 'View Details',
         vehicle_details_title: 'Vehicle Details',
-        vehicle_details_desc: 'Complete information for',
+        vehicle_details_desc: 'Complete information for vehicle',
         license_plate: 'License Plate',
         type: 'Type',
         update_status_title: 'Update Status',
@@ -391,11 +393,13 @@ const translations = {
         alert_geolocation_not_supported: 'A geolocalização não é suportada por este navegador.',
         client_status_set_to: "O estado do cliente foi definido para",
         update_status: 'Atualizar Estado',
-        update_status_desc_1: 'Alterar o estado do lixo para',
+        update_status_for: 'Atualizar estado para {{name}}',
+        update_status_desc_1: 'Alterar o estado do lixo para o cliente selecionado.',
         route_manager_title: 'Gestor de Rotas',
         route_manager_subtitle: 'Defina e faça a gestão das rotas de coleta.',
         create_new_route: 'Criar Nova Rota',
         edit_route: 'Editar Rota',
+        edit_route_desc: 'Modifique o nome e os dias de coleta para esta rota.',
         no_routes_created: 'Nenhuma rota criada ainda.',
         create_route_desc: 'Insira os detalhes para a sua nova rota de coleta.',
         route_name: 'Nome da Rota',
@@ -412,7 +416,7 @@ const translations = {
         next_maintenance: 'Próxima Manutenção',
         view_details: 'Ver Detalhes',
         vehicle_details_title: 'Detalhes do Veículo',
-        vehicle_details_desc: 'Informação completa para',
+        vehicle_details_desc: 'Informação completa para o veículo',
         license_plate: 'Matrícula',
         type: 'Tipo',
         update_status_title: 'Atualizar Estado',
@@ -497,10 +501,12 @@ const translations = {
     }
 };
 
+type TranslationKey = keyof typeof translations.EN;
+
 interface LanguageContextType {
     language: Language;
     toggleLanguage: () => void;
-    t: (key: keyof typeof translations.EN) => string;
+    t: (key: TranslationKey, options?: { [key: string]: string | number }) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -512,8 +518,14 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         setLanguage(prevLang => prevLang === 'EN' ? 'PT' : 'EN');
     };
 
-    const t = (key: keyof typeof translations.EN): string => {
-        return translations[language][key] || translations['EN'][key] || key;
+    const t = (key: TranslationKey, options?: { [key: string]: string | number }): string => {
+        let translation = translations[language][key] || translations['EN'][key] || key;
+        if (options) {
+            Object.keys(options).forEach(optionKey => {
+                translation = translation.replace(`{{${optionKey}}}`, String(options[optionKey]));
+            });
+        }
+        return translation;
     };
     
     return (
