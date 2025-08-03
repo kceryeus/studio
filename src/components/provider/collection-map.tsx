@@ -66,7 +66,7 @@ const routeLayer: LayerProps = {
     'line-cap': 'round',
   },
   paint: {
-    'line-color': 'hsl(var(--primary))',
+    'line-color': '#468499', // Use a static color instead of CSS variable
     'line-width': 4,
     'line-opacity': 0.8
   },
