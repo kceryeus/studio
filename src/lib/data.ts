@@ -1,4 +1,4 @@
-import type { Client, Route, DayOfWeek } from './types';
+import type { Client, Route, DayOfWeek, Vehicle, Worker } from './types';
 import { subDays, addDays, format } from 'date-fns';
 
 const today = new Date();
@@ -109,4 +109,67 @@ export const DUMMY_CLIENTS: Client[] = [
     sharesLocation: true,
     routeId: 'ROUTE03',
   },
+];
+
+export const DUMMY_VEHICLES: Vehicle[] = [
+    {
+        id: 'VEH01',
+        type: 'Garbage Truck',
+        fuelType: 'Diesel',
+        capacity: 10000, // in kg
+        licensePlate: 'ABC-123',
+        status: 'available',
+        nextMaintenance: format(addDays(today, 45), 'yyyy-MM-dd'),
+    },
+    {
+        id: 'VEH02',
+        type: 'Recycling Van',
+        fuelType: 'Gasoline',
+        capacity: 2500, // in kg
+        licensePlate: 'XYZ-789',
+        status: 'in-use',
+        nextMaintenance: format(addDays(today, 15), 'yyyy-MM-dd'),
+    },
+    {
+        id: 'VEH03',
+        type: 'Garbage Truck',
+        fuelType: 'Diesel',
+        capacity: 12000, // in kg
+        licensePlate: 'DEF-456',
+        status: 'maintenance',
+        nextMaintenance: format(subDays(today, 2), 'yyyy-MM-dd'),
+    },
+];
+
+export const DUMMY_WORKERS: Worker[] = [
+    {
+        id: 'WRK01',
+        name: 'Peter Parker',
+        role: 'Driver',
+        employmentType: 'permanent',
+        wage: 20.50, // per hour
+        status: 'working',
+        assignedVehicleId: 'VEH02',
+        lastCheckIn: '08:05 AM',
+    },
+    {
+        id: 'WRK02',
+        name: 'Mary Jane',
+        role: 'Picker',
+        employmentType: 'occasional',
+        wage: 15.00, // per hour
+        status: 'working',
+        assignedVehicleId: 'VEH02',
+        lastCheckIn: '08:15 AM',
+    },
+    {
+        id: 'WRK03',
+        name: 'Bruce Wayne',
+        role: 'Driver',
+        employmentType: 'permanent',
+        wage: 22.00, // per hour
+        status: 'on-leave',
+        assignedVehicleId: null,
+        lastCheckIn: null,
+    }
 ];

@@ -19,6 +19,8 @@ import {
   CreditCard,
   LogOut,
   Home,
+  Truck,
+  Users
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 
@@ -59,6 +61,28 @@ export default function ProviderLayout({
                 <Link href="/provider/map">
                   <Map />
                   <span>Collection Map</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip={{ children: "Fleet", side: "right" }}
+              >
+                <Link href="/provider/fleet">
+                  <Truck />
+                  <span>Fleet</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip={{ children: "Workforce", side: "right" }}
+              >
+                <Link href="/provider/workforce">
+                  <Users />
+                  <span>Workforce</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

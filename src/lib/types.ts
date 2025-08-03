@@ -32,3 +32,29 @@ export type Client = {
   sharesLocation: boolean;
   routeId: string | null;
 };
+
+export type VehicleStatus = 'in-use' | 'maintenance' | 'available';
+
+export type Vehicle = {
+    id: string;
+    type: string;
+    fuelType: 'Diesel' | 'Gasoline' | 'Electric';
+    capacity: number; // in kg
+    licensePlate: string;
+    status: VehicleStatus;
+    nextMaintenance: string;
+};
+
+export type WorkerStatus = 'working' | 'on-leave';
+export type EmploymentType = 'permanent' | 'occasional';
+
+export type Worker = {
+    id: string;
+    name: string;
+    role: 'Driver' | 'Picker' | 'Supervisor';
+    employmentType: EmploymentType;
+    wage: number; // per hour
+    status: WorkerStatus;
+    assignedVehicleId: string | null;
+    lastCheckIn: string | null;
+};
