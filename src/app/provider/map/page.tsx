@@ -24,7 +24,8 @@ export default function ProviderMapPage() {
         (error) => {
           console.error("Error getting user location:", error);
           alert(t('alert_location_error'));
-        }
+        },
+        { enableHighAccuracy: true } // Request a more precise location
       );
     } else {
       alert(t('alert_geolocation_not_supported'));
