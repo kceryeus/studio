@@ -1,6 +1,7 @@
 
 "use client"
 import Link from "next/link";
+import { usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -36,6 +37,17 @@ export default function ProviderLayout({
   children: React.ReactNode;
 }) {
   const { t } = useLanguage();
+  const pathname = usePathname();
+
+  const menuItems = [
+    { href: "/provider/dashboard", icon: LayoutDashboard, label: t('dashboard') },
+    { href: "/provider/map", icon: Map, label: t('collection_map') },
+    { href: "/provider/fleet", icon: Truck, label: t('fleet') },
+    { href: "/provider/workforce", icon: Users, label: t('workforce') },
+    { href: "/provider/payments", icon: CreditCard, label: t('payments') },
+    { href: "/provider/subscribe", icon: BadgeDollarSign, label: t('subscription') },
+  ];
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -49,72 +61,20 @@ export default function ProviderLayout({
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip={{ children: t('dashboard'), side: "right" }}
-              >
-                <Link href="/provider/dashboard">
-                  <LayoutDashboard />
-                  <span>{t('dashboard')}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip={{ children: t('collection_map'), side: "right" }}
-              >
-                <Link href="/provider/map">
-                  <Map />
-                  <span>{t('collection_map')}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip={{ children: t('fleet'), side: "right" }}
-              >
-                <Link href="/provider/fleet">
-                  <Truck />
-                  <span>{t('fleet')}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip={{ children: t('workforce'), side: "right" }}
-              >
-                <Link href="/provider/workforce">
-                  <Users />
-                  <span>{t('workforce')}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip={{ children: t('payments'), side: "right" }}
-              >
-                <Link href="/provider/payments">
-                  <CreditCard />
-                  <span>{t('payments')}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip={{ children: t('subscription'), side: "right" }}
-              >
-                <Link href="/provider/subscribe">
-                  <BadgeDollarSign />
-                  <span>{t('subscription')}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {menuItems.map((item) => (
+               <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{ children: item.label, side: "right" }}
+                  isActive={pathname === item.href}
+                >
+                  <Link href={item.href}>
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
@@ -149,9 +109,9 @@ export default function ProviderLayout({
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex items-center justify-between p-4 border-b">
+        <header className="flex items-center justify-between p-4 border-b h-16">
           <SidebarTrigger />
-          <h1 className="text-xl font-semibold">{t('provider_dashboard')}</h1>
+          <h1 className="text-xl font-semibold">{menuItems.find(item => item.href === pathname)?.label || t('provider_dashboard')}</h1>
         </header>
         <main className="p-4 bg-background">{children}</main>
       </SidebarInset>

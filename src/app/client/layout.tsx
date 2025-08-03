@@ -1,6 +1,7 @@
 
 "use client"
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, DollarSign, User, LogOut } from "lucide-react";
@@ -21,6 +22,13 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const { t } = useLanguage();
+  const pathname = usePathname();
+
+  const menuItems = [
+    { href: "/client/dashboard", icon: LayoutDashboard, label: t('dashboard') },
+    { href: "/client/payment", icon: DollarSign, label: t('make_payment') },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
@@ -31,19 +39,17 @@ export default function ClientLayout({
               RECOLIXO
             </span>
           </Link>
-          <nav className="flex items-center gap-4">
-             <Button variant="ghost" asChild className="hidden md:inline-flex">
-                <Link href="/client/dashboard">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    {t('dashboard')}
-                </Link>
-             </Button>
-             <Button asChild className="hidden md:inline-flex">
-                <Link href="/client/payment">
-                    <DollarSign className="mr-2 h-4 w-4" />
-                    {t('make_payment')}
-                </Link>
-             </Button>
+          <nav className="hidden md:flex items-center gap-4">
+            {menuItems.map(item => (
+               <Button key={item.href} variant={pathname === item.href ? 'secondary' : 'ghost'} asChild>
+                  <Link href={item.href}>
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.label}
+                  </Link>
+               </Button>
+            ))}
+          </nav>
+          <div className="flex items-center gap-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -63,19 +69,20 @@ export default function ClientLayout({
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className="md:hidden">
-                    <Link href="/client/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> {t('dashboard')}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="md:hidden">
-                    <Link href="/client/payment"><DollarSign className="mr-2 h-4 w-4" /> {t('make_payment')}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="md:hidden"/>
+                 <div className="md:hidden">
+                    {menuItems.map(item => (
+                       <DropdownMenuItem key={item.href} asChild>
+                          <Link href={item.href}><item.icon className="mr-2 h-4 w-4" /> {item.label}</Link>
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator/>
+                 </div>
                 <DropdownMenuItem asChild>
                     <Link href="/"><LogOut className="mr-2 h-4 w-4" /> {t('logout')}</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </nav>
+          </div>
         </div>
       </header>
       <main className="container py-8">{children}</main>

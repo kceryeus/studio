@@ -153,6 +153,11 @@ const translations = {
         create_new_route: 'Create New Route',
         edit_route: 'Edit Route',
         no_routes_created: 'No routes created yet.',
+        create_route_desc: 'Enter the details for your new collection route.',
+        route_name: 'Route Name',
+        route_name_placeholder: 'e.g. Bairro Central A',
+        collection_days: 'Collection Days',
+        create_route_button: 'Create Route',
 
         // Provider Fleet
         fleet_management_title: 'Fleet Management',
@@ -392,6 +397,12 @@ const translations = {
         create_new_route: 'Criar Nova Rota',
         edit_route: 'Editar Rota',
         no_routes_created: 'Nenhuma rota criada ainda.',
+        create_route_desc: 'Insira os detalhes para a sua nova rota de coleta.',
+        route_name: 'Nome da Rota',
+        route_name_placeholder: 'ex: Bairro Central A',
+        collection_days: 'Dias de Coleta',
+        create_route_button: 'Criar Rota',
+
 
         // Provider Fleet
         fleet_management_title: 'Gestão de Frota',

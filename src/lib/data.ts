@@ -1,20 +1,21 @@
+
 import type { Client, Route, DayOfWeek, Vehicle, Worker, TimesheetEntry, Assignment } from './types';
 import { subDays, addDays, format } from 'date-fns';
 
 const today = new Date();
 
 export const DUMMY_ROUTES: Route[] = [
-    { id: 'ROUTE01', name: 'Downtown Route', weekdays: ['Monday', 'Thursday'] },
-    { id: 'ROUTE02', name: 'Suburbia Line', weekdays: ['Tuesday', 'Friday'] },
-    { id: 'ROUTE03', name: 'Industrial Park', weekdays: ['Wednesday'] },
+    { id: 'ROUTE01', name: 'Rota do Centro da Cidade', weekdays: ['Monday', 'Thursday'] },
+    { id: 'ROUTE02', name: 'Linha Suburbana', weekdays: ['Tuesday', 'Friday'] },
+    { id: 'ROUTE03', name: 'Parque Industrial', weekdays: ['Wednesday'] },
 ];
 
 export const DUMMY_CLIENTS: Client[] = [
   {
     id: 'CLI001',
-    name: 'John Doe',
-    address: '123 Maple Street, Springfield',
-    coordinates: { lat: -18.916, lng: 34.845 },
+    name: 'Julio Silva',
+    address: 'Av. Julius Nyerere, 123, Maputo',
+    coordinates: { lat: -25.9613, lng: 32.5895 },
     collectionStatus: 'active',
     paymentStatus: 'paid',
     garbageStatus: 'collected',
@@ -30,9 +31,9 @@ export const DUMMY_CLIENTS: Client[] = [
   },
   {
     id: 'CLI002',
-    name: 'Jane Smith',
-    address: '456 Oak Avenue, Springfield',
-    coordinates: { lat: -18.922, lng: 34.855 },
+    name: 'Mariana Costa',
+    address: 'Rua de Bagamoyo, 456, Maputo',
+    coordinates: { lat: -25.9559, lng: 32.5727 },
     collectionStatus: 'active',
     paymentStatus: 'due',
     garbageStatus: 'out',
@@ -47,9 +48,9 @@ export const DUMMY_CLIENTS: Client[] = [
   },
   {
     id: 'CLI003',
-    name: 'Bob Johnson',
-    address: '789 Pine Lane, Springfield',
-    coordinates: { lat: -25.965, lng: 32.583 },
+    name: 'Carlos Pereira',
+    address: 'Av. 24 de Julho, 789, Maputo',
+    coordinates: { lat: -25.9754, lng: 32.5768 },
     collectionStatus: 'active',
     paymentStatus: 'overdue',
     garbageStatus: 'pending',
@@ -57,14 +58,14 @@ export const DUMMY_CLIENTS: Client[] = [
     nextPaymentDueDate: format(subDays(today, 10), 'yyyy-MM-dd'),
     balance: 3000,
     paymentHistory: [],
-    sharesLocation: false,
+    sharesLocation: true,
     routeId: 'ROUTE02',
   },
   {
     id: 'CLI004',
-    name: 'Alice Williams',
-    address: '101 Elm Court, Springfield',
-    coordinates: { lat: -25.970, lng: 32.575 },
+    name: 'Ana Rodrigues',
+    address: 'Av. da Marginal, 101, Maputo',
+    coordinates: { lat: -25.9845, lng: 32.6075 },
     collectionStatus: 'suspended',
     paymentStatus: 'overdue',
     garbageStatus: 'missed',
@@ -77,9 +78,9 @@ export const DUMMY_CLIENTS: Client[] = [
   },
   {
     id: 'CLI005',
-    name: 'Charlie Brown',
-    address: '212 Birch Road, Springfield',
-    coordinates: { lat: -19.833, lng: 34.866 },
+    name: 'Paulo Santos',
+    address: 'Av. Vladimir Lenine, 212, Maputo',
+    coordinates: { lat: -25.9682, lng: 32.5834 },
     collectionStatus: 'active',
     paymentStatus: 'paid',
     garbageStatus: 'not-out',
@@ -94,9 +95,9 @@ export const DUMMY_CLIENTS: Client[] = [
   },
   {
     id: 'CLI006',
-    name: 'Diana Prince',
-    address: '333 Cedar Blvd, Springfield',
-    coordinates: { lat: -19.825, lng: 34.858 },
+    name: 'Sofia Lopes',
+    address: 'Rua da Argélia, 333, Maputo',
+    coordinates: { lat: -25.9598, lng: 32.5936 },
     collectionStatus: 'active',
     paymentStatus: 'paid',
     garbageStatus: 'collected',
@@ -106,7 +107,7 @@ export const DUMMY_CLIENTS: Client[] = [
     paymentHistory: [
       { id: 'PAY005', date: format(subDays(today, 25), 'yyyy-MM-dd'), amount: 1500, status: 'paid' },
     ],
-    sharesLocation: true,
+    sharesLocation: false,
     routeId: 'ROUTE03',
   },
 ];
@@ -117,7 +118,7 @@ export const DUMMY_VEHICLES: Vehicle[] = [
         type: 'Garbage Truck',
         fuelType: 'Diesel',
         capacity: 10000, // in kg
-        licensePlate: 'ABC-123',
+        licensePlate: 'M-01-AB',
         status: 'available',
         nextMaintenance: format(addDays(today, 45), 'yyyy-MM-dd'),
     },
@@ -126,7 +127,7 @@ export const DUMMY_VEHICLES: Vehicle[] = [
         type: 'Recycling Van',
         fuelType: 'Gasoline',
         capacity: 2500, // in kg
-        licensePlate: 'XYZ-789',
+        licensePlate: 'M-02-CD',
         status: 'in-use',
         nextMaintenance: format(addDays(today, 15), 'yyyy-MM-dd'),
     },
@@ -135,7 +136,7 @@ export const DUMMY_VEHICLES: Vehicle[] = [
         type: 'Garbage Truck',
         fuelType: 'Diesel',
         capacity: 12000, // in kg
-        licensePlate: 'DEF-456',
+        licensePlate: 'M-03-EF',
         status: 'maintenance',
         nextMaintenance: format(subDays(today, 2), 'yyyy-MM-dd'),
     },
@@ -193,7 +194,7 @@ export const DUMMY_ASSIGNMENTS: Assignment[] = [
         workerId: 'WRK01',
         vehicleId: 'VEH02',
         date: format(today, 'yyyy-MM-dd'),
-        taskDescription: 'Downtown Route Collection',
+        taskDescription: 'Rota do Centro da Cidade',
         status: 'active',
     },
     {
@@ -201,7 +202,7 @@ export const DUMMY_ASSIGNMENTS: Assignment[] = [
         workerId: 'WRK02',
         vehicleId: 'VEH02',
         date: format(today, 'yyyy-MM-dd'),
-        taskDescription: 'Downtown Route Assisting',
+        taskDescription: 'Assistência na Rota do Centro da Cidade',
         status: 'active',
     },
     {
@@ -209,7 +210,7 @@ export const DUMMY_ASSIGNMENTS: Assignment[] = [
         workerId: 'WRK03',
         vehicleId: 'VEH01',
         date: format(subDays(today, 1), 'yyyy-MM-dd'),
-        taskDescription: 'Industrial Park Collection',
+        taskDescription: 'Coleta do Parque Industrial',
         status: 'completed',
     }
 ];

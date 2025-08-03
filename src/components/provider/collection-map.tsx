@@ -107,13 +107,13 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
   };
   
   return (
-    <div className="h-[70vh] w-full relative">
+    <div className="h-full w-full relative">
       <Map
         ref={mapRef}
         initialViewState={{
-          longitude: 35.5296, // Center of Mozambique
-          latitude: -18.6657, // Center of Mozambique
-          zoom: 5,
+          longitude: 32.583,
+          latitude: -25.965,
+          zoom: 12,
         }}
         mapStyle={MAPTILER_STYLE_URL}
         style={{ borderRadius: "0.5rem", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)"}}
