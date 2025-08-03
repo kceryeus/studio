@@ -1,14 +1,20 @@
-import type { Client } from './types';
+import type { Client, Route, DayOfWeek } from './types';
 import { subDays, addDays, format } from 'date-fns';
 
 const today = new Date();
+
+export const DUMMY_ROUTES: Route[] = [
+    { id: 'ROUTE01', name: 'Downtown Route', weekdays: ['Monday', 'Thursday'] },
+    { id: 'ROUTE02', name: 'Suburbia Line', weekdays: ['Tuesday', 'Friday'] },
+    { id: 'ROUTE03', name: 'Industrial Park', weekdays: ['Wednesday'] },
+];
 
 export const DUMMY_CLIENTS: Client[] = [
   {
     id: 'CLI001',
     name: 'John Doe',
     address: '123 Maple Street, Springfield',
-    coordinates: { lat: 34.0522, lng: -118.2437 },
+    coordinates: { lat: -18.916, lng: 34.845 },
     collectionStatus: 'active',
     paymentStatus: 'paid',
     garbageStatus: 'collected',
@@ -19,12 +25,14 @@ export const DUMMY_CLIENTS: Client[] = [
       { id: 'PAY001', date: format(subDays(today, 30), 'yyyy-MM-dd'), amount: 25, status: 'paid' },
       { id: 'PAY002', date: format(subDays(today, 60), 'yyyy-MM-dd'), amount: 25, status: 'paid' },
     ],
+    sharesLocation: true,
+    routeId: 'ROUTE01',
   },
   {
     id: 'CLI002',
     name: 'Jane Smith',
     address: '456 Oak Avenue, Springfield',
-    coordinates: { lat: 34.055, lng: -118.245 },
+    coordinates: { lat: -18.922, lng: 34.855 },
     collectionStatus: 'active',
     paymentStatus: 'due',
     garbageStatus: 'out',
@@ -34,12 +42,14 @@ export const DUMMY_CLIENTS: Client[] = [
     paymentHistory: [
       { id: 'PAY003', date: format(subDays(today, 35), 'yyyy-MM-dd'), amount: 25, status: 'paid' },
     ],
+    sharesLocation: true,
+    routeId: 'ROUTE01',
   },
   {
     id: 'CLI003',
     name: 'Bob Johnson',
     address: '789 Pine Lane, Springfield',
-    coordinates: { lat: 34.05, lng: -118.25 },
+    coordinates: { lat: -25.965, lng: 32.583 },
     collectionStatus: 'active',
     paymentStatus: 'overdue',
     garbageStatus: 'pending',
@@ -47,12 +57,14 @@ export const DUMMY_CLIENTS: Client[] = [
     nextPaymentDueDate: format(subDays(today, 10), 'yyyy-MM-dd'),
     balance: 50,
     paymentHistory: [],
+    sharesLocation: false,
+    routeId: 'ROUTE02',
   },
   {
     id: 'CLI004',
     name: 'Alice Williams',
     address: '101 Elm Court, Springfield',
-    coordinates: { lat: 34.048, lng: -118.24 },
+    coordinates: { lat: -25.970, lng: 32.575 },
     collectionStatus: 'suspended',
     paymentStatus: 'overdue',
     garbageStatus: 'missed',
@@ -60,12 +72,14 @@ export const DUMMY_CLIENTS: Client[] = [
     nextPaymentDueDate: format(subDays(today, 40), 'yyyy-MM-dd'),
     balance: 75,
     paymentHistory: [],
+    sharesLocation: true,
+    routeId: 'ROUTE02',
   },
   {
     id: 'CLI005',
     name: 'Charlie Brown',
     address: '212 Birch Road, Springfield',
-    coordinates: { lat: 34.058, lng: -118.255 },
+    coordinates: { lat: -19.833, lng: 34.866 },
     collectionStatus: 'active',
     paymentStatus: 'paid',
     garbageStatus: 'not-out',
@@ -75,12 +89,14 @@ export const DUMMY_CLIENTS: Client[] = [
     paymentHistory: [
       { id: 'PAY004', date: format(subDays(today, 28), 'yyyy-MM-dd'), amount: 25, status: 'paid' },
     ],
+    sharesLocation: true,
+    routeId: 'ROUTE03',
   },
   {
     id: 'CLI006',
     name: 'Diana Prince',
     address: '333 Cedar Blvd, Springfield',
-    coordinates: { lat: 34.06, lng: -118.248 },
+    coordinates: { lat: -19.825, lng: 34.858 },
     collectionStatus: 'active',
     paymentStatus: 'paid',
     garbageStatus: 'collected',
@@ -90,5 +106,7 @@ export const DUMMY_CLIENTS: Client[] = [
     paymentHistory: [
       { id: 'PAY005', date: format(subDays(today, 25), 'yyyy-MM-dd'), amount: 25, status: 'paid' },
     ],
+    sharesLocation: true,
+    routeId: 'ROUTE03',
   },
 ];

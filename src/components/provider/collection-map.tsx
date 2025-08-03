@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import Map, { Marker, Popup, NavigationControl, FullscreenControl } from "react-map-gl/maplibre";
-import type { MapRef } from "react-map-gl/maplibre";
+import { useState, useEffect } from "react";
+import Map, { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer } from "react-map-gl/maplibre";
+import type { MapRef, LayerProps } from "react-map-gl/maplibre";
 import { DUMMY_CLIENTS } from "@/lib/data";
-import type { Client, GarbageStatus } from "@/lib/types";
+import type { Client, GarbageStatus, Route } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,7 +13,8 @@ import {
   XCircle,
   Hourglass,
   BellOff,
-  MapPin
+  MapPin,
+  UserCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -51,12 +52,46 @@ const GarbageStatusIcon = ({
   }
 };
 
-export default function CollectionMap() {
+const routeLayer: LayerProps = {
+  id: 'route-line',
+  type: 'line',
+  source: 'route',
+  layout: {
+    'line-join': 'round',
+    'line-cap': 'round',
+  },
+  paint: {
+    'line-color': 'hsl(var(--primary))',
+    'line-width': 4,
+    'line-opacity': 0.8
+  },
+};
+
+export default function CollectionMap({ selectedRoute, userLocation }: { selectedRoute: Route | null, userLocation: [number, number] | null }) {
   const [clients, setClients] = useState<Client[]>(DUMMY_CLIENTS);
   const [dialogClient, setDialogClient] = useState<Client | null>(null);
   const [popupInfo, setPopupInfo] = useState<Client | null>(null);
+  const mapRef = React.useRef<MapRef>(null);
 
   const { toast } = useToast();
+
+  const clientsOnRoute = selectedRoute ? clients.filter(c => c.routeId === selectedRoute.id && c.sharesLocation) : [];
+
+  const routeGeoJSON = selectedRoute ? {
+    type: 'Feature' as const,
+    properties: {},
+    geometry: {
+        type: 'LineString' as const,
+        coordinates: clientsOnRoute.map(c => [c.coordinates.lng, c.coordinates.lat])
+    }
+  } : null;
+
+  useEffect(() => {
+    if (userLocation && mapRef.current) {
+      mapRef.current.flyTo({ center: [userLocation[1], userLocation[0]], zoom: 14 });
+    }
+  }, [userLocation]);
+
 
   const updateGarbageStatus = (clientId: string, status: GarbageStatus) => {
     setClients((prevClients) =>
@@ -74,6 +109,7 @@ export default function CollectionMap() {
   return (
     <div className="h-[70vh] w-full relative">
       <Map
+        ref={mapRef}
         initialViewState={{
           longitude: 35.5296, // Center of Mozambique
           latitude: -18.6657, // Center of Mozambique
@@ -82,11 +118,12 @@ export default function CollectionMap() {
         mapStyle={MAPTILER_STYLE_URL}
         style={{ borderRadius: "0.5rem", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)"}}
         maxBounds={mozambiqueBounds}
+        mapLib={import('maplibre-gl')}
       >
         <FullscreenControl />
         <NavigationControl />
 
-        {clients.map((client) => (
+        {clientsOnRoute.map((client) => (
           <Marker
             key={client.id}
             longitude={client.coordinates.lng}
@@ -99,6 +136,18 @@ export default function CollectionMap() {
              <MapPin className="text-primary w-8 h-8" />
           </Marker>
         ))}
+
+        {userLocation && (
+            <Marker longitude={userLocation[1]} latitude={userLocation[0]}>
+                <UserCircle className="w-8 h-8 text-blue-500 animate-pulse" />
+            </Marker>
+        )}
+
+        {routeGeoJSON && (
+            <Source id="route-source" type="geojson" data={routeGeoJSON}>
+                <Layer {...routeLayer} />
+            </Source>
+        )}
 
         {popupInfo && (
           <Popup

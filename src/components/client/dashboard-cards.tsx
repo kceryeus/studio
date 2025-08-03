@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar, CircleDollarSign, Truck, History } from "lucide-react";
 import GarbageStatusToggle from "./garbage-status-toggle";
+import LocationSharing from "./location-sharing";
 import { Badge } from "../ui/badge";
 
 export default function DashboardCards({ client }: { client: Client }) {
@@ -68,8 +69,9 @@ export default function DashboardCards({ client }: { client: Client }) {
           </CardContent>
         </Card>
       </div>
-      <div className="lg:col-span-1">
+      <div className="lg:col-span-1 space-y-6">
         <GarbageStatusToggle initialStatus={client.garbageStatus} />
+        <LocationSharing initialStatus={client.sharesLocation} />
       </div>
     </div>
   );
