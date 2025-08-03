@@ -14,42 +14,27 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PlusCircle, Pencil } from "lucide-react";
 import { useLanguage } from "@/context/language-context";
+import { cn } from '@/lib/utils';
 
 export default function RouteManager({ 
     routes, 
     selectedRoute,
     onSelectRoute,
-    onCreateRoute,
-    onUpdateRoute
+    onStartCreateRoute,
+    onUpdateRoute,
+    isDrawing
 }: { 
     routes: Route[], 
     selectedRoute: Route | null,
     onSelectRoute: (route: Route | null) => void,
-    onCreateRoute: (route: Route) => void,
-    onUpdateRoute: (route: Route) => void
+    onStartCreateRoute: () => void,
+    onUpdateRoute: (route: Route) => void,
+    isDrawing: boolean
 }) {
     const { t } = useLanguage();
-    const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-
-    const [newRouteName, setNewRouteName] = React.useState('');
-    const [newRouteDays, setNewRouteDays] = React.useState<DayOfWeek[]>([]);
-    
     const [editingRoute, setEditingRoute] = React.useState<Route | null>(null);
 
-    const handleCreateRoute = () => {
-        if (newRouteName && newRouteDays.length > 0) {
-            const newRoute: Route = {
-                id: `ROUTE${Date.now()}`,
-                name: newRouteName,
-                weekdays: newRouteDays
-            };
-            onCreateRoute(newRoute);
-            setIsCreateModalOpen(false);
-            setNewRouteName('');
-            setNewRouteDays([]);
-        }
-    }
     
     const handleEditRoute = () => {
         if (editingRoute) {
@@ -60,34 +45,26 @@ export default function RouteManager({
     }
     
     const openEditModal = (route: Route) => {
-        setEditingRoute(route);
+        setEditingRoute(JSON.parse(JSON.stringify(route)));
         setIsEditModalOpen(true);
     }
 
     const weekdays: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-    const renderRouteDialog = (
-        isEdit: boolean,
-        isOpen: boolean,
-        onOpenChange: (open: boolean) => void,
-        routeData: Partial<Route> | null,
-        onDataChange: (data: Partial<Route>) => void,
-        onSubmit: () => void,
-        onClose: () => void
-    ) => (
-        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    const renderEditDialog = () => (
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{isEdit ? t('edit_route') : t('create_new_route')}</DialogTitle>
-                    <DialogDescription>{isEdit ? t('edit_route_desc') : t('create_route_desc')}</DialogDescription>
+                    <DialogTitle>{t('edit_route')}</DialogTitle>
+                    <DialogDescription>{t('edit_route_desc')}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="space-y-2">
                         <Label htmlFor="routeName">{t('route_name')}</Label>
                         <Input 
                             id="routeName" 
-                            value={routeData?.name || ''} 
-                            onChange={(e) => onDataChange({ ...routeData, name: e.target.value })}
+                            value={editingRoute?.name || ''} 
+                            onChange={(e) => setEditingRoute(prev => prev ? {...prev, name: e.target.value} : null)}
                             placeholder={t('route_name_placeholder')}
                         />
                     </div>
@@ -97,8 +74,8 @@ export default function RouteManager({
                             type="multiple" 
                             variant="outline" 
                             className="flex-wrap justify-start"
-                            value={routeData?.weekdays || []}
-                            onValueChange={(value: DayOfWeek[]) => onDataChange({ ...routeData, weekdays: value })}
+                            value={editingRoute?.weekdays || []}
+                            onValueChange={(value: DayOfWeek[]) => setEditingRoute(prev => prev ? {...prev, weekdays: value} : null)}
                          >
                             {weekdays.map(day => (
                                 <ToggleGroupItem key={day} value={day} aria-label={t(day, {lng: 'en'})}>
@@ -109,9 +86,9 @@ export default function RouteManager({
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>{t('cancel')}</Button>
-                    <Button onClick={onSubmit} disabled={!routeData?.name || !routeData?.weekdays || routeData.weekdays.length === 0}>
-                        {isEdit ? t('save_changes') : t('create_route_button')}
+                    <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>{t('cancel')}</Button>
+                    <Button onClick={handleEditRoute} disabled={!editingRoute?.name || !editingRoute?.weekdays || editingRoute.weekdays.length === 0}>
+                        {t('save_changes')}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -120,13 +97,13 @@ export default function RouteManager({
 
     return (
         <>
-            <Card className="h-full flex flex-col">
+            <Card className={cn("h-full flex flex-col transition-opacity", isDrawing && "opacity-50 pointer-events-none")}>
                 <CardHeader>
                     <CardTitle>{t('route_manager_title')}</CardTitle>
                     <CardDescription>{t('route_manager_subtitle')}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-grow space-y-4 overflow-hidden flex flex-col">
-                    <Button className="w-full" variant="outline" onClick={() => setIsCreateModalOpen(true)}>
+                    <Button className="w-full" variant="outline" onClick={onStartCreateRoute} disabled={isDrawing}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         {t('create_new_route')}
                     </Button>
@@ -157,37 +134,7 @@ export default function RouteManager({
                 </CardContent>
             </Card>
 
-            {/* Create Modal */}
-            {renderRouteDialog(
-                false,
-                isCreateModalOpen,
-                setIsCreateModalOpen,
-                { name: newRouteName, weekdays: newRouteDays },
-                (data) => {
-                    setNewRouteName(data.name || '');
-                    setNewRouteDays(data.weekdays || []);
-                },
-                handleCreateRoute,
-                () => {
-                    setIsCreateModalOpen(false);
-                    setNewRouteName('');
-                    setNewRouteDays([]);
-                }
-            )}
-
-             {/* Edit Modal */}
-             {renderRouteDialog(
-                true,
-                isEditModalOpen,
-                setIsEditModalOpen,
-                editingRoute,
-                (data) => setEditingRoute(prev => ({...prev!, ...data})),
-                handleEditRoute,
-                () => {
-                    setIsEditModalOpen(false);
-                    setEditingRoute(null);
-                }
-            )}
+             {renderEditDialog()}
         </>
     )
 }

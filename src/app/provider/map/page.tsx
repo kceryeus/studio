@@ -4,16 +4,32 @@ import CollectionMap from "@/components/provider/collection-map";
 import RouteManager from "@/components/provider/route-manager";
 import { DUMMY_ROUTES, DUMMY_CLIENTS } from "@/lib/data";
 import { useState } from "react";
-import type { Route, Client } from "@/lib/types";
+import type { Route, Client, DayOfWeek } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { LocateFixed } from "lucide-react";
+import { LocateFixed, Save, Ban, MousePointerClick } from "lucide-react";
 import { useLanguage } from "@/context/language-context";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 
 export default function ProviderMapPage() {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [routes, setRoutes] = useState<Route[]>(DUMMY_ROUTES);
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+
+  // State for the new interactive route creation
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [newRoutePoints, setNewRoutePoints] = useState<{ lat: number; lng: number }[]>([]);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [newRouteName, setNewRouteName] = useState('');
+  const [newRouteDays, setNewRouteDays] = useState<DayOfWeek[]>([]);
+
 
   const handleLocateUser = () => {
     if (navigator.geolocation) {
@@ -25,16 +41,12 @@ export default function ProviderMapPage() {
           console.error("Error getting user location:", error);
           alert(t('alert_location_error'));
         },
-        { enableHighAccuracy: true } // Request a more precise location
+        { enableHighAccuracy: true }
       );
     } else {
       alert(t('alert_geolocation_not_supported'));
     }
   };
-
-  const handleCreateRoute = (newRoute: Route) => {
-    setRoutes(prev => [...prev, newRoute]);
-  }
 
   const handleUpdateRoute = (updatedRoute: Route) => {
     setRoutes(prev => prev.map(r => r.id === updatedRoute.id ? updatedRoute : r));
@@ -43,7 +55,57 @@ export default function ProviderMapPage() {
     }
   }
 
+  const handleMapClick = (coords: { lat: number; lng: number }) => {
+    if (isDrawing) {
+      setNewRoutePoints(prev => [...prev, coords]);
+    }
+  };
+
+  const handleMarkerClick = (index: number) => {
+    if (isDrawing) {
+      setNewRoutePoints(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleStartDrawing = () => {
+    setSelectedRoute(null);
+    setIsDrawing(true);
+    setNewRoutePoints([]);
+  }
+
+  const handleCancelDrawing = () => {
+    setIsDrawing(false);
+    setNewRoutePoints([]);
+  }
+
+  const handleSaveRoute = () => {
+    if (newRouteName && newRouteDays.length > 0) {
+        const newRoute: Route = {
+            id: `ROUTE${Date.now()}`,
+            name: newRouteName,
+            weekdays: newRouteDays,
+            path: newRoutePoints,
+        };
+        setRoutes(prev => [...prev, newRoute]);
+        toast({
+            title: "Route Created",
+            description: `Successfully created route "${newRoute.name}".`,
+        });
+        // Reset states
+        setIsDrawing(false);
+        setNewRoutePoints([]);
+        setIsSaveModalOpen(false);
+        setNewRouteName('');
+        setNewRouteDays([]);
+    }
+  };
+
+
   const allVisibleClients = DUMMY_CLIENTS.filter(c => c.sharesLocation);
+  const clientsOnSelectedRoute = selectedRoute ? allVisibleClients.filter(c => c.routeId === selectedRoute.id) : [];
+
+  const weekdays: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
 
   return (
     <div className="flex flex-col h-[calc(100vh-theme(spacing.24))] overflow-hidden">
@@ -57,24 +119,91 @@ export default function ProviderMapPage() {
               {t('my_location')}
           </Button>
       </div>
+
+       {isDrawing && (
+        <Alert className="mb-4 bg-primary/10 border-primary/20 text-primary-foreground">
+          <MousePointerClick className="h-5 w-5" />
+          <AlertDescription className="text-primary font-medium">
+            Drawing Mode: Click on the map to add points to your route. Click a point to remove it.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-hidden">
-        <div className="lg:col-span-2 h-full min-h-[400px]">
-          <CollectionMap 
+        <div className="lg:col-span-2 h-full min-h-[400px] relative">
+           <CollectionMap 
               clients={allVisibleClients}
               route={selectedRoute}
               userLocation={userLocation}
-          />
+              isDrawing={isDrawing}
+              newRoutePoints={newRoutePoints}
+              onMapClick={handleMapClick}
+              onMarkerClick={handleMarkerClick}
+            />
         </div>
         <div className="lg:col-span-1 h-full overflow-hidden">
            <RouteManager 
               routes={routes} 
               selectedRoute={selectedRoute}
               onSelectRoute={setSelectedRoute}
-              onCreateRoute={handleCreateRoute}
+              onStartCreateRoute={handleStartDrawing}
               onUpdateRoute={handleUpdateRoute}
+              isDrawing={isDrawing}
           />
         </div>
       </div>
+      {isDrawing && (
+          <div className="absolute bottom-10 right-10 z-10 flex gap-2">
+            <Button variant="destructive" onClick={handleCancelDrawing}>
+                <Ban className="mr-2 h-4 w-4" /> Cancel
+            </Button>
+            <Button onClick={() => setIsSaveModalOpen(true)} disabled={newRoutePoints.length < 2}>
+                <Save className="mr-2 h-4 w-4" /> Save Route
+            </Button>
+          </div>
+        )}
+
+      <Dialog open={isSaveModalOpen} onOpenChange={setIsSaveModalOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Save New Route</DialogTitle>
+                    <DialogDescription>Give your new route a name and set the collection days.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="routeName">Route Name</Label>
+                        <Input 
+                            id="routeName" 
+                            value={newRouteName} 
+                            onChange={(e) => setNewRouteName(e.target.value)}
+                            placeholder={t('route_name_placeholder')}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                         <Label>Collection Days</Label>
+                         <ToggleGroup 
+                            type="multiple" 
+                            variant="outline" 
+                            className="flex-wrap justify-start"
+                            value={newRouteDays}
+                            onValueChange={(value: DayOfWeek[]) => setNewRouteDays(value)}
+                         >
+                            {weekdays.map(day => (
+                                <ToggleGroupItem key={day} value={day} aria-label={t(day, {lng: 'en'})}>
+                                    {t(day as any).substring(0,3)}
+                                </ToggleGroupItem>
+                            ))}
+                         </ToggleGroup>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsSaveModalOpen(false)}>Cancel</Button>
+                    <Button onClick={handleSaveRoute} disabled={!newRouteName || newRouteDays.length === 0}>
+                        Save
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+      </Dialog>
     </div>
   );
 }

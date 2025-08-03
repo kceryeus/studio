@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import Map, { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer } from "react-map-gl/maplibre";
-import type { MapRef, LayerProps } from "react-map-gl/maplibre";
+import type { MapRef, LayerProps, MapLayerMouseEvent } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import type { Client, GarbageStatus, Route } from "@/lib/types";
@@ -16,7 +16,8 @@ import {
   Hourglass,
   BellOff,
   MapPin,
-  UserCircle
+  UserCircle,
+  MoveUpRight,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/language-context";
@@ -66,13 +67,39 @@ const routeLayer: LayerProps = {
     'line-cap': 'round',
   },
   paint: {
-    'line-color': '#468499', // Use a static color instead of CSS variable
+    'line-color': '#468499',
     'line-width': 4,
     'line-opacity': 0.8
   },
 };
 
-export default function CollectionMap({ clients, route, userLocation }: { clients: Client[], route: Route | null, userLocation: [number, number] | null }) {
+const newRouteLayer: LayerProps = {
+    ...routeLayer,
+    id: 'new-route-line',
+    paint: {
+        'line-color': '#D4AF37', // Accent color
+        'line-width': 5,
+        'line-dasharray': [2, 2],
+    }
+}
+
+export default function CollectionMap({ 
+    clients, 
+    route, 
+    userLocation,
+    isDrawing,
+    newRoutePoints,
+    onMapClick,
+    onMarkerClick,
+}: { 
+    clients: Client[], 
+    route: Route | null, 
+    userLocation: [number, number] | null,
+    isDrawing: boolean;
+    newRoutePoints: { lat: number; lng: number }[];
+    onMapClick: (coords: { lat: number; lng: number }) => void;
+    onMarkerClick: (index: number) => void;
+}) {
   const [clientData, setClientData] = React.useState<Client[]>(clients);
   const [dialogClient, setDialogClient] = React.useState<Client | null>(null);
   const [popupInfo, setPopupInfo] = React.useState<Client | null>(null);
@@ -93,6 +120,18 @@ export default function CollectionMap({ clients, route, userLocation }: { client
     }
   }, [route]);
 
+  const newRouteGeoJSON = React.useMemo(() => {
+    if (!isDrawing || newRoutePoints.length < 2) return null;
+    return {
+        type: 'Feature' as const,
+        properties: {},
+        geometry: {
+            type: 'LineString' as const,
+            coordinates: newRoutePoints.map(p => [p.lng, p.lat])
+        }
+    }
+  }, [isDrawing, newRoutePoints]);
+
 
   React.useEffect(() => {
     if (userLocation && mapRef.current) {
@@ -100,6 +139,11 @@ export default function CollectionMap({ clients, route, userLocation }: { client
     }
   }, [userLocation]);
 
+  const handleInternalMapClick = (event: MapLayerMouseEvent) => {
+    if (isDrawing) {
+      onMapClick(event.lngLat);
+    }
+  };
 
   const updateGarbageStatus = (clientId: string, status: GarbageStatus) => {
     setClientData((prevClients) =>
@@ -127,6 +171,8 @@ export default function CollectionMap({ clients, route, userLocation }: { client
         style={{width: '100%', height: '100%'}}
         maxBounds={mozambiqueBounds}
         mapLib={import('maplibre-gl')}
+        onClick={handleInternalMapClick}
+        cursor={isDrawing ? 'crosshair' : 'grab'}
       >
         <FullscreenControl position="top-right" />
         <NavigationControl position="top-right" />
@@ -137,8 +183,10 @@ export default function CollectionMap({ clients, route, userLocation }: { client
             longitude={client.coordinates.lng}
             latitude={client.coordinates.lat}
             onClick={(e) => {
-              e.originalEvent.stopPropagation();
-              setPopupInfo(client);
+              if (!isDrawing) {
+                e.originalEvent.stopPropagation();
+                setPopupInfo(client);
+              }
             }}
             anchor="bottom"
           >
@@ -152,9 +200,32 @@ export default function CollectionMap({ clients, route, userLocation }: { client
             </Marker>
         )}
 
+        {/* Markers for new route being drawn */}
+        {isDrawing && newRoutePoints.map((point, index) => (
+            <Marker
+                key={`new-point-${index}`}
+                longitude={point.lng}
+                latitude={point.lat}
+                onClick={(e) => {
+                    e.originalEvent.stopPropagation();
+                    onMarkerClick(index);
+                }}
+            >
+                <div className="bg-accent rounded-full p-1 shadow-lg border-2 border-white">
+                    <MoveUpRight className="w-4 h-4 text-accent-foreground" />
+                </div>
+            </Marker>
+        ))}
+
         {routeGeoJSON && (
             <Source id="route-source" type="geojson" data={routeGeoJSON}>
                 <Layer {...routeLayer} />
+            </Source>
+        )}
+
+        {newRouteGeoJSON && (
+            <Source id="new-route-source" type="geojson" data={newRouteGeoJSON}>
+                <Layer {...newRouteLayer} />
             </Source>
         )}
 
