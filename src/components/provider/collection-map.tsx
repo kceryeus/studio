@@ -27,6 +27,10 @@ import {
 
 const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/streets-v2/style.json?key=xQ1eFBidgVoYA8BIrNEu`;
 
+const mozambiqueBounds: [[number, number], [number, number]] = [
+  [30.2, -26.8], // Southwest coordinates
+  [40.9, -10.4]  // Northeast coordinates
+];
 
 const GarbageStatusIcon = ({
   status,
@@ -71,12 +75,13 @@ export default function CollectionMap() {
     <div className="h-[70vh] w-full relative">
       <Map
         initialViewState={{
-          longitude: -118.2437,
-          latitude: 34.0522,
-          zoom: 12,
+          longitude: 35.5296, // Center of Mozambique
+          latitude: -18.6657, // Center of Mozambique
+          zoom: 5,
         }}
         mapStyle={MAPTILER_STYLE_URL}
         style={{ borderRadius: "0.5rem", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)"}}
+        maxBounds={mozambiqueBounds}
       >
         <FullscreenControl />
         <NavigationControl />
