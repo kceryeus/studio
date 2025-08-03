@@ -4,6 +4,8 @@
 import * as React from "react";
 import Map, { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer } from "react-map-gl/maplibre";
 import type { MapRef, LayerProps } from "react-map-gl/maplibre";
+import 'maplibre-gl/dist/maplibre-gl.css';
+
 import type { Client, GarbageStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
