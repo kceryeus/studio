@@ -63,7 +63,7 @@ const routeLayer: LayerProps = {
     'line-cap': 'round',
   },
   paint: {
-    'line-color': 'hsl(var(--primary))',
+    'line-color': '#468499', // Using hardcoded color to match --primary
     'line-width': 4,
     'line-opacity': 0.8
   },
