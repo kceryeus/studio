@@ -42,7 +42,7 @@ export default function ProviderMapPage() {
   const allVisibleClients = DUMMY_CLIENTS.filter(c => c.sharesLocation);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-theme(spacing.16))]">
+    <div className="flex flex-col h-[calc(100vh-theme(spacing.24))]">
       <div className="flex justify-between items-center mb-4 flex-shrink-0">
           <div>
               <h2 className="text-2xl font-bold">{t('map_title')}</h2>
@@ -53,15 +53,15 @@ export default function ProviderMapPage() {
               {t('my_location')}
           </Button>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-grow">
-        <div className="lg:col-span-3 h-full">
+      <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-hidden">
+        <div className="lg:col-span-2 h-full min-h-[400px]">
           <CollectionMap 
               clients={allVisibleClients}
               routeClients={clientsOnRoute}
               userLocation={userLocation}
           />
         </div>
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 h-full">
            <RouteManager 
               routes={routes} 
               selectedRoute={selectedRoute}
