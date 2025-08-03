@@ -1,10 +1,5 @@
 "use client";
-
-import dynamic from 'next/dynamic';
-
-const CollectionMap = dynamic(() => import('@/components/provider/collection-map'), { 
-    ssr: false 
-});
+import CollectionMap from "@/components/provider/collection-map";
 
 export default function ProviderMapPage() {
   return (

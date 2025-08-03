@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
-import { TileLayer, Marker, Popup } from "react-leaflet";
+import { useState } from "react";
+import Map, { Marker, Popup, NavigationControl, FullscreenControl } from "react-map-gl";
+import type { MapRef } from "react-map-gl";
 import { DUMMY_CLIENTS } from "@/lib/data";
 import type { Client, GarbageStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -12,10 +13,9 @@ import {
   XCircle,
   Hourglass,
   BellOff,
+  MapPin
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 
 import {
   Dialog,
@@ -25,16 +25,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-// Fix Leaflet default icon path
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
+const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/streets-v2/style.json?key=get-your-own-key`;
+
 
 const GarbageStatusIcon = ({
   status,
@@ -55,26 +47,17 @@ const GarbageStatusIcon = ({
   }
 };
 
-const mapCenter: L.LatLngExpression = [34.0522, -118.2437];
-
-// Dynamically import MapContainer to avoid SSR issues
-const MapContainer =
-  typeof window !== "undefined"
-    ? require("react-leaflet").MapContainer
-    : () => null;
-
 export default function CollectionMap() {
   const [clients, setClients] = useState<Client[]>(DUMMY_CLIENTS);
   const [dialogClient, setDialogClient] = useState<Client | null>(null);
+  const [popupInfo, setPopupInfo] = useState<Client | null>(null);
+
   const { toast } = useToast();
-  const mapRef = useRef<L.Map | null>(null);
 
   const updateGarbageStatus = (clientId: string, status: GarbageStatus) => {
     setClients((prevClients) =>
       prevClients.map((client) =>
-        client.id === clientId
-          ? { ...client, garbageStatus: status }
-          : client
+        client.id === clientId ? { ...client, garbageStatus: status } : client
       )
     );
     toast({
@@ -83,56 +66,72 @@ export default function CollectionMap() {
     });
     setDialogClient(null);
   };
-
-  const markers = useMemo(() => {
-    return clients.map((client) => (
-      <Marker
-        key={client.id}
-        position={[client.coordinates.lat, client.coordinates.lng]}
-      >
-        <Popup>
-          <div className="p-2 w-64 space-y-2">
-            <h3 className="font-bold text-lg">{client.name}</h3>
-            <p className="text-sm text-muted-foreground">{client.address}</p>
-            <div className="flex items-center gap-2">
-              <span className="text-sm">Status:</span>
-              <Badge variant="outline" className="capitalize">
-                {client.garbageStatus.replace("-", " ")}
-              </Badge>
-              <GarbageStatusIcon status={client.garbageStatus} />
-            </div>
-            <div className="pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setDialogClient(client)}
-              >
-                Update Status
-              </Button>
-            </div>
-          </div>
-        </Popup>
-      </Marker>
-    ));
-  }, [clients]);
-
+  
   return (
-    <>
-      <MapContainer
-        center={mapCenter}
-        zoom={13}
-        style={{ height: "70vh", width: "100%" }}
-        className="rounded-lg shadow-lg"
-        whenCreated={(mapInstance: L.Map) => {
-          mapRef.current = mapInstance;
+    <div className="h-[70vh] w-full relative">
+       <div className="absolute top-2 left-2 z-10 bg-white/70 backdrop-blur-sm p-2 rounded-lg shadow-md">
+        <p className="text-sm text-destructive font-bold">
+            NOTE: Please replace the placeholder MapTiler API key in the code to see the map.
+        </p>
+      </div>
+      <Map
+        initialViewState={{
+          longitude: -118.2437,
+          latitude: 34.0522,
+          zoom: 12,
         }}
+        mapStyle={MAPTILER_STYLE_URL}
+        style={{ borderRadius: "0.5rem", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)"}}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {markers}
-      </MapContainer>
+        <FullscreenControl />
+        <NavigationControl />
+
+        {clients.map((client) => (
+          <Marker
+            key={client.id}
+            longitude={client.coordinates.lng}
+            latitude={client.coordinates.lat}
+            onClick={(e) => {
+              e.originalEvent.stopPropagation();
+              setPopupInfo(client);
+            }}
+          >
+             <MapPin className="text-primary w-8 h-8" />
+          </Marker>
+        ))}
+
+        {popupInfo && (
+          <Popup
+            longitude={popupInfo.coordinates.lng}
+            latitude={popupInfo.coordinates.lat}
+            onClose={() => setPopupInfo(null)}
+            anchor="top"
+            closeButton={false}
+            className="w-64"
+          >
+            <div className="p-2 space-y-2">
+                <h3 className="font-bold text-lg">{popupInfo.name}</h3>
+                <p className="text-sm text-muted-foreground">{popupInfo.address}</p>
+                <div className="flex items-center gap-2">
+                <span className="text-sm">Status:</span>
+                <Badge variant="outline" className="capitalize">
+                    {popupInfo.garbageStatus.replace("-", " ")}
+                </Badge>
+                <GarbageStatusIcon status={popupInfo.garbageStatus} />
+                </div>
+                <div className="pt-2">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDialogClient(popupInfo)}
+                >
+                    Update Status
+                </Button>
+                </div>
+            </div>
+          </Popup>
+        )}
+      </Map>
 
       <Dialog open={!!dialogClient} onOpenChange={() => setDialogClient(null)}>
         <DialogContent>
@@ -188,6 +187,6 @@ export default function CollectionMap() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
