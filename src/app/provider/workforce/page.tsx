@@ -1,7 +1,6 @@
 import WorkforceList from '@/components/provider/workforce-list';
-import { DUMMY_WORKERS } from '@/lib/data';
+import { DUMMY_WORKERS, DUMMY_ASSIGNMENTS, DUMMY_VEHICLES } from '@/lib/data';
 import ActiveAssignments from '@/components/provider/active-assignments';
-import { DUMMY_ASSIGNMENTS } from '@/lib/data';
 
 export default function ProviderWorkforcePage() {
     return (
