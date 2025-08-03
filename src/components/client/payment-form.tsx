@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { CreditCard, DollarSign, User, Calendar } from 'lucide-react';
+import { CreditCard, User, Calendar } from 'lucide-react';
 
 const paymentSchema = z.object({
-    amount: z.coerce.number().min(1, { message: 'Amount must be at least $1.' }),
+    amount: z.coerce.number().min(1, { message: 'Amount must be at least 1 MT.' }),
     cardNumber: z.string().length(16, { message: 'Card number must be 16 digits.' }).regex(/^\d+$/, { message: "Card number must be digits only." }),
     expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, { message: 'Expiry must be in MM/YY format.' }),
     cvc: z.string().length(3, { message: 'CVC must be 3 digits.' }).regex(/^\d+$/, { message: "CVC must be digits only."}),
@@ -36,7 +36,7 @@ export default function PaymentForm({ client }: { client: Client }) {
         console.log(values);
         toast({
             title: 'Payment Successful',
-            description: `Your payment of $${values.amount.toFixed(2)} has been processed.`,
+            description: `Your payment of ${values.amount.toFixed(2)} MT has been processed.`,
         });
         form.reset({
             ...form.getValues(),
@@ -51,7 +51,7 @@ export default function PaymentForm({ client }: { client: Client }) {
         <Card className="mt-6">
             <CardHeader>
                 <CardTitle>Payment Details</CardTitle>
-                <CardDescription>Enter your payment information below. Your current balance is <span className="font-bold text-primary">${client.balance.toFixed(2)}</span>.</CardDescription>
+                <CardDescription>Enter your payment information below. Your current balance is <span className="font-bold text-primary">{client.balance.toFixed(2)} MT</span>.</CardDescription>
             </CardHeader>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -61,11 +61,11 @@ export default function PaymentForm({ client }: { client: Client }) {
                             name="amount"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Payment Amount</FormLabel>
+                                    <FormLabel>Payment Amount (MT)</FormLabel>
                                     <FormControl>
                                        <div className="relative">
-                                           <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                           <Input type="number" step="0.01" {...field} className="pl-8" />
+                                           <span className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">MT</span>
+                                           <Input type="number" step="0.01" {...field} className="pl-10" />
                                        </div>
                                     </FormControl>
                                     <FormMessage />

@@ -1,4 +1,4 @@
-import type { Client, Route, DayOfWeek, Vehicle, Worker } from './types';
+import type { Client, Route, DayOfWeek, Vehicle, Worker, TimesheetEntry } from './types';
 import { subDays, addDays, format } from 'date-fns';
 
 const today = new Date();
@@ -22,8 +22,8 @@ export const DUMMY_CLIENTS: Client[] = [
     nextPaymentDueDate: format(addDays(today, 25), 'yyyy-MM-dd'),
     balance: 0,
     paymentHistory: [
-      { id: 'PAY001', date: format(subDays(today, 30), 'yyyy-MM-dd'), amount: 25, status: 'paid' },
-      { id: 'PAY002', date: format(subDays(today, 60), 'yyyy-MM-dd'), amount: 25, status: 'paid' },
+      { id: 'PAY001', date: format(subDays(today, 30), 'yyyy-MM-dd'), amount: 1500, status: 'paid' },
+      { id: 'PAY002', date: format(subDays(today, 60), 'yyyy-MM-dd'), amount: 1500, status: 'paid' },
     ],
     sharesLocation: true,
     routeId: 'ROUTE01',
@@ -38,9 +38,9 @@ export const DUMMY_CLIENTS: Client[] = [
     garbageStatus: 'out',
     nextCollectionDate: format(addDays(today, 2), 'yyyy-MM-dd'),
     nextPaymentDueDate: format(addDays(today, 5), 'yyyy-MM-dd'),
-    balance: 25,
+    balance: 1500,
     paymentHistory: [
-      { id: 'PAY003', date: format(subDays(today, 35), 'yyyy-MM-dd'), amount: 25, status: 'paid' },
+      { id: 'PAY003', date: format(subDays(today, 35), 'yyyy-MM-dd'), amount: 1500, status: 'paid' },
     ],
     sharesLocation: true,
     routeId: 'ROUTE01',
@@ -55,7 +55,7 @@ export const DUMMY_CLIENTS: Client[] = [
     garbageStatus: 'pending',
     nextCollectionDate: format(addDays(today, 2), 'yyyy-MM-dd'),
     nextPaymentDueDate: format(subDays(today, 10), 'yyyy-MM-dd'),
-    balance: 50,
+    balance: 3000,
     paymentHistory: [],
     sharesLocation: false,
     routeId: 'ROUTE02',
@@ -70,7 +70,7 @@ export const DUMMY_CLIENTS: Client[] = [
     garbageStatus: 'missed',
     nextCollectionDate: 'N/A',
     nextPaymentDueDate: format(subDays(today, 40), 'yyyy-MM-dd'),
-    balance: 75,
+    balance: 4500,
     paymentHistory: [],
     sharesLocation: true,
     routeId: 'ROUTE02',
@@ -87,7 +87,7 @@ export const DUMMY_CLIENTS: Client[] = [
     nextPaymentDueDate: format(addDays(today, 20), 'yyyy-MM-dd'),
     balance: 0,
     paymentHistory: [
-      { id: 'PAY004', date: format(subDays(today, 28), 'yyyy-MM-dd'), amount: 25, status: 'paid' },
+      { id: 'PAY004', date: format(subDays(today, 28), 'yyyy-MM-dd'), amount: 1500, status: 'paid' },
     ],
     sharesLocation: true,
     routeId: 'ROUTE03',
@@ -104,7 +104,7 @@ export const DUMMY_CLIENTS: Client[] = [
     nextPaymentDueDate: format(addDays(today, 18), 'yyyy-MM-dd'),
     balance: 0,
     paymentHistory: [
-      { id: 'PAY005', date: format(subDays(today, 25), 'yyyy-MM-dd'), amount: 25, status: 'paid' },
+      { id: 'PAY005', date: format(subDays(today, 25), 'yyyy-MM-dd'), amount: 1500, status: 'paid' },
     ],
     sharesLocation: true,
     routeId: 'ROUTE03',
@@ -141,36 +141,46 @@ export const DUMMY_VEHICLES: Vehicle[] = [
     },
 ];
 
+const peterParkerTimesheet: TimesheetEntry[] = [
+    { date: format(subDays(today, 1), 'yyyy-MM-dd'), checkIn: '08:05', checkOut: '17:02', totalHours: 8.9 },
+    { date: format(subDays(today, 2), 'yyyy-MM-dd'), checkIn: '07:58', checkOut: '17:05', totalHours: 9.1 },
+    { date: format(subDays(today, 3), 'yyyy-MM-dd'), checkIn: '08:10', checkOut: '16:55', totalHours: 8.7 },
+    { date: format(subDays(today, 4), 'yyyy-MM-dd'), checkIn: '08:00', checkOut: '17:00', totalHours: 9.0 },
+];
+
 export const DUMMY_WORKERS: Worker[] = [
     {
         id: 'WRK01',
         name: 'Peter Parker',
         role: 'Driver',
         employmentType: 'permanent',
-        wage: 20.50, // per hour
+        wage: 1200, // per hour
         status: 'working',
         assignedVehicleId: 'VEH02',
         lastCheckIn: '08:05 AM',
-        imageUrl: 'https://placehold.co/100x100.png'
+        imageUrl: 'https://placehold.co/100x100.png',
+        timesheet: peterParkerTimesheet,
     },
     {
         id: 'WRK02',
         name: 'Mary Jane',
         role: 'Picker',
         employmentType: 'occasional',
-        wage: 15.00, // per hour
+        wage: 800, // per hour
         status: 'working',
         assignedVehicleId: 'VEH02',
         lastCheckIn: '08:15 AM',
+        timesheet: [],
     },
     {
         id: 'WRK03',
         name: 'Bruce Wayne',
         role: 'Driver',
         employmentType: 'permanent',
-        wage: 22.00, // per hour
+        wage: 1350, // per hour
         status: 'on-leave',
         assignedVehicleId: null,
         lastCheckIn: null,
+        timesheet: [],
     }
 ];

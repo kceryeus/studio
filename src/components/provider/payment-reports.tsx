@@ -83,7 +83,7 @@ export default function PaymentReports() {
                             <TableRow key={client.id}>
                                 <TableCell className="font-medium">{client.name}</TableCell>
                                 <TableCell><PaymentBadge status={client.paymentStatus} /></TableCell>
-                                <TableCell className="text-right">${client.balance.toFixed(2)}</TableCell>
+                                <TableCell className="text-right">{client.balance.toFixed(2)} MT</TableCell>
                                 <TableCell>{client.collectionStatus === 'suspended' ? 'N/A' : client.nextPaymentDueDate}</TableCell>
                             </TableRow>
                         ))}
@@ -108,7 +108,7 @@ export default function PaymentReports() {
                                 axisLine={false}
                             />
                             <YAxis
-                                tickFormatter={(value) => `$${value}`}
+                                tickFormatter={(value) => `${value} MT`}
                             />
                             <ChartTooltip content={<ChartTooltipContent />} />
                             <Bar dataKey="total" fill="var(--color-total)" radius={4} />
@@ -121,7 +121,7 @@ export default function PaymentReports() {
                     <CardTitle>Total Outstanding Balance</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-3xl font-bold text-destructive">${totalBalanceDue.toFixed(2)}</p>
+                    <p className="text-3xl font-bold text-destructive">{totalBalanceDue.toFixed(2)} MT</p>
                     <p className="text-xs text-muted-foreground">Across all clients with due or overdue payments.</p>
                 </CardContent>
             </Card>

@@ -23,6 +23,8 @@ import {
   Users
 } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/language-toggle";
 
 export default function ProviderLayout({
   children,
@@ -124,6 +126,10 @@ export default function ProviderLayout({
                 </Link>
              </Button>
           </div>
+           <div className="flex items-center justify-center gap-2 mt-2 group-data-[collapsible=icon]:flex-col">
+              <ThemeToggle />
+              <LanguageToggle />
+            </div>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>

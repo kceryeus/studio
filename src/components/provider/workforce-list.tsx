@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from 'react';
-import type { Worker, Vehicle } from '@/lib/types';
+import { useState, useMemo } from 'react';
+import type { Worker, Vehicle, TimesheetEntry } from '@/lib/types';
 import { DUMMY_VEHICLES } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const WorkerStatusBadge = ({ status }: { status: 'working' | 'on-leave' }) => {
     return (
@@ -35,6 +36,11 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
             setIsAssignModalOpen(false);
         }
     };
+
+    const totalHours = useMemo(() => {
+        if (!selectedWorker || !selectedWorker.timesheet) return 0;
+        return selectedWorker.timesheet.reduce((acc, entry) => acc + entry.totalHours, 0);
+    }, [selectedWorker]);
     
     return (
         <>
@@ -65,7 +71,7 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
                             </div>
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground flex items-center gap-2"><DollarSign className="w-4 h-4" /> Wage</span>
-                                <span className="font-medium">${worker.wage.toFixed(2)} / hour</span>
+                                <span className="font-medium">{worker.wage.toFixed(2)} MT / hour</span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground flex items-center gap-2"><Clock className="w-4 h-4" /> Last Check-in</span>
@@ -92,16 +98,46 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
 
             {/* Timesheet Modal */}
             <Dialog open={isTimesheetModalOpen} onOpenChange={setIsTimesheetModalOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Timesheet for {selectedWorker?.name}</DialogTitle>
                         <DialogDescription>
-                            Recent check-in and check-out times.
+                            Recent check-in and check-out times for the current month.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4 text-center">
-                        <p className="text-muted-foreground">Timesheet functionality is not yet implemented.</p>
+                    <div className="py-4">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Check In</TableHead>
+                                    <TableHead>Check Out</TableHead>
+                                    <TableHead className="text-right">Total Hours</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {selectedWorker?.timesheet?.map((entry) => (
+                                    <TableRow key={entry.date}>
+                                        <TableCell>{entry.date}</TableCell>
+                                        <TableCell>{entry.checkIn}</TableCell>
+                                        <TableCell>{entry.checkOut}</TableCell>
+                                        <TableCell className="text-right">{entry.totalHours.toFixed(1)}</TableCell>
+                                    </TableRow>
+                                ))}
+                                {!selectedWorker?.timesheet?.length && (
+                                     <TableRow>
+                                        <TableCell colSpan={4} className="text-center text-muted-foreground">No timesheet entries found.</TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
                     </div>
+                     <DialogFooter className="sm:justify-between">
+                        <div className="font-bold">Total Monthly Hours: {totalHours.toFixed(1)}</div>
+                        <DialogClose asChild>
+                            <Button variant="outline">Close</Button>
+                        </DialogClose>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 

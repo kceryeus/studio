@@ -34,7 +34,7 @@ export default function DashboardCards({ client }: { client: Client }) {
             <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Current Balance</p>
                 <p className={`text-lg font-semibold ${client.balance > 0 ? 'text-destructive' : ''}`}>
-                    ${client.balance.toFixed(2)}
+                    {client.balance.toFixed(2)} MT
                 </p>
             </div>
           </CardContent>
@@ -56,7 +56,7 @@ export default function DashboardCards({ client }: { client: Client }) {
                 {client.paymentHistory.map(payment => (
                   <TableRow key={payment.id}>
                     <TableCell>{payment.date}</TableCell>
-                    <TableCell className="text-right font-medium">${payment.amount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-medium">{payment.amount.toFixed(2)} MT</TableCell>
                   </TableRow>
                 ))}
                 {client.paymentHistory.length === 0 && (

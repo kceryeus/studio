@@ -48,6 +48,13 @@ export type Vehicle = {
 export type WorkerStatus = 'working' | 'on-leave';
 export type EmploymentType = 'permanent' | 'occasional';
 
+export type TimesheetEntry = {
+    date: string;
+    checkIn: string;
+    checkOut: string;
+    totalHours: number;
+};
+
 export type Worker = {
     id: string;
     name: string;
@@ -58,4 +65,5 @@ export type Worker = {
     assignedVehicleId: string | null;
     lastCheckIn: string | null;
     imageUrl?: string;
+    timesheet?: TimesheetEntry[];
 };
