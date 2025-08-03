@@ -6,7 +6,7 @@ import { DUMMY_CLIENTS } from '@/lib/data';
 import type { Client, GarbageStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Check, XCircle, Hourglass, Snooze } from 'lucide-react';
+import { Trash2, Check, XCircle, Hourglass, BellOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const GarbageStatusIcon = ({ status, ...props }: { status: GarbageStatus } & React.ComponentProps<typeof Trash2>) => {
@@ -18,7 +18,7 @@ const GarbageStatusIcon = ({ status, ...props }: { status: GarbageStatus } & Rea
         case 'missed':
             return <XCircle {...props} className="text-red-500" />;
         case 'not-out':
-            return <Snooze {...props} className="text-gray-500" />;
+            return <BellOff {...props} className="text-gray-500" />;
         case 'pending':
         default:
             return <Hourglass {...props} className="text-yellow-500" />;
