@@ -101,12 +101,12 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                        <p><strong>License Plate:</strong> {selectedVehicle?.licensePlate}</p>
-                        <p><strong>Type:</strong> {selectedVehicle?.type}</p>
-                        <p><strong>Fuel Type:</strong> {selectedVehicle?.fuelType}</p>
-                        <p><strong>Capacity:</strong> {selectedVehicle?.capacity} kg</p>
-                        <p><strong>Next Maintenance:</strong> {selectedVehicle?.nextMaintenance}</p>
-                        <p><strong>Status:</strong> <VehicleStatusBadge status={selectedVehicle?.status || 'available'} /></p>
+                        <div className="flex justify-between"><strong>License Plate:</strong> <span>{selectedVehicle?.licensePlate}</span></div>
+                        <div className="flex justify-between"><strong>Type:</strong> <span>{selectedVehicle?.type}</span></div>
+                        <div className="flex justify-between"><strong>Fuel Type:</strong> <span>{selectedVehicle?.fuelType}</span></div>
+                        <div className="flex justify-between"><strong>Capacity:</strong> <span>{selectedVehicle?.capacity} kg</span></div>
+                        <div className="flex justify-between"><strong>Next Maintenance:</strong> <span>{selectedVehicle?.nextMaintenance}</span></div>
+                        <div className="flex justify-between items-center"><strong>Status:</strong> <VehicleStatusBadge status={selectedVehicle?.status || 'available'} /></div>
                     </div>
                 </DialogContent>
             </Dialog>
