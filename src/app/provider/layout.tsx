@@ -34,7 +34,7 @@ export default function ProviderLayout({
           <div className="flex items-center gap-2">
             <Logo className="w-8 h-8" />
             <span className="text-lg font-semibold text-primary group-data-[collapsible=icon]:hidden">
-              EcoCollect
+              RECOLIXO
             </span>
           </div>
         </SidebarHeader>

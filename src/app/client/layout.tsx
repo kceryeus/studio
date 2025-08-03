@@ -24,7 +24,7 @@ export default function ClientLayout({
           <Link href="/" className="flex items-center gap-2">
             <Logo className="w-8 h-8" />
             <span className="text-lg font-semibold text-primary">
-              EcoCollect
+              RECOLIXO
             </span>
           </Link>
           <nav className="flex items-center gap-4">

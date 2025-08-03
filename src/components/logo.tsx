@@ -5,7 +5,7 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 100 100"
-      aria-label="EcoCollect Logo"
+      aria-label="RECOLIXO Logo"
       {...props}
     >
       <g fill="hsl(var(--primary))">

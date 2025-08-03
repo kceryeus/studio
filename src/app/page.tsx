@@ -10,12 +10,21 @@ export default function Home() {
       <div className="text-center mb-12">
         <Logo className="h-16 w-16 mx-auto mb-4" />
         <h1 className="text-5xl font-bold font-headline text-primary">
-          Welcome to EcoCollect
+          Welcome to RECOLIXO
         </h1>
         <p className="text-muted-foreground mt-2 text-lg">
           The modern solution for waste management.
         </p>
       </div>
+
+       <div className="flex gap-4 mb-12">
+          <Button asChild>
+            <Link href="/login">Login</Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link href="/signup">Sign Up</Link>
+          </Button>
+        </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
         <Card className="hover:shadow-lg transition-shadow duration-300">
@@ -67,7 +76,7 @@ export default function Home() {
         </Card>
       </div>
       <footer className="mt-16 text-center text-muted-foreground text-sm">
-        <p>Copyright © {new Date().getFullYear()} EcoCollect. All Rights Reserved.</p>
+        <p>Copyright © {new Date().getFullYear()} RECOLIXO. All Rights Reserved.</p>
       </footer>
     </main>
   );
