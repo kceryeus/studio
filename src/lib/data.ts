@@ -5,8 +5,24 @@ import { subDays, addDays, format } from 'date-fns';
 const today = new Date();
 
 export const DUMMY_ROUTES: Route[] = [
-    { id: 'ROUTE01', name: 'Rota do Centro da Cidade', weekdays: ['Monday', 'Thursday'] },
-    { id: 'ROUTE02', name: 'Linha Suburbana', weekdays: ['Tuesday', 'Friday'] },
+    { 
+        id: 'ROUTE01', 
+        name: 'Rota do Centro da Cidade', 
+        weekdays: ['Monday', 'Thursday'],
+        path: [
+            { lat: -25.9613, lng: 32.5895 },
+            { lat: -25.9559, lng: 32.5727 }
+        ]
+    },
+    { 
+        id: 'ROUTE02', 
+        name: 'Linha Suburbana', 
+        weekdays: ['Tuesday', 'Friday'],
+        path: [
+            { lat: -25.9754, lng: 32.5768 },
+            { lat: -25.9818, lng: 32.5940 }
+        ]
+    },
     { id: 'ROUTE03', name: 'Parque Industrial', weekdays: ['Wednesday'] },
 ];
 
@@ -65,7 +81,7 @@ export const DUMMY_CLIENTS: Client[] = [
     id: 'CLI004',
     name: 'Ana Rodrigues',
     address: 'Av. da Marginal, 101, Maputo',
-    coordinates: { lat: -25.9845, lng: 32.5975 }, // Corrected longitude
+    coordinates: { lat: -25.9818, lng: 32.5940 },
     collectionStatus: 'suspended',
     paymentStatus: 'overdue',
     garbageStatus: 'missed',
