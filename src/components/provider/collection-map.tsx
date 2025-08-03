@@ -25,7 +25,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/streets-v2/style.json?key=get-your-own-key`;
+const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/streets-v2/style.json?key=xQ1eFBidgVoYA8BIrNEu`;
 
 
 const GarbageStatusIcon = ({
@@ -69,11 +69,6 @@ export default function CollectionMap() {
   
   return (
     <div className="h-[70vh] w-full relative">
-       <div className="absolute top-2 left-2 z-10 bg-white/70 backdrop-blur-sm p-2 rounded-lg shadow-md">
-        <p className="text-sm text-destructive font-bold">
-            NOTE: Please replace the placeholder MapTiler API key in the code to see the map.
-        </p>
-      </div>
       <Map
         initialViewState={{
           longitude: -118.2437,
