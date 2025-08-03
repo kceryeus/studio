@@ -21,7 +21,11 @@ export default function ProviderDashboardPage() {
                     <Link href="#" className="underline font-semibold ml-1">View subscription plans.</Link>
                 </p>
             </div>
-            <Button size="sm" variant="outline" className="bg-transparent border-accent-foreground text-accent-foreground hover:bg-accent-foreground/10">Subscribe Now</Button>
+            <Button size="sm" variant="outline" className="bg-transparent border-accent-foreground text-accent-foreground hover:bg-accent-foreground/10" asChild>
+                <Link href="https://paysuite.tech/checkout/c3fe5a91-78ea-4ddc-8d92-e9de67dcceb9" target="_blank">
+                    Subscribe Now
+                </Link>
+            </Button>
         </CardContent>
       </Card>
       <div className="grid gap-4 md:grid-cols-3">
