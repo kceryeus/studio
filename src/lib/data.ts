@@ -1,4 +1,4 @@
-import type { Client, Route, DayOfWeek, Vehicle, Worker, TimesheetEntry } from './types';
+import type { Client, Route, DayOfWeek, Vehicle, Worker, TimesheetEntry, Assignment } from './types';
 import { subDays, addDays, format } from 'date-fns';
 
 const today = new Date();
@@ -170,6 +170,7 @@ export const DUMMY_WORKERS: Worker[] = [
         status: 'working',
         assignedVehicleId: 'VEH02',
         lastCheckIn: '08:15 AM',
+        imageUrl: '',
         timesheet: [],
     },
     {
@@ -181,6 +182,34 @@ export const DUMMY_WORKERS: Worker[] = [
         status: 'on-leave',
         assignedVehicleId: null,
         lastCheckIn: null,
+        imageUrl: '',
         timesheet: [],
+    }
+];
+
+export const DUMMY_ASSIGNMENTS: Assignment[] = [
+    {
+        id: 'ASG01',
+        workerId: 'WRK01',
+        vehicleId: 'VEH02',
+        date: format(today, 'yyyy-MM-dd'),
+        taskDescription: 'Downtown Route Collection',
+        status: 'active',
+    },
+    {
+        id: 'ASG02',
+        workerId: 'WRK02',
+        vehicleId: 'VEH02',
+        date: format(today, 'yyyy-MM-dd'),
+        taskDescription: 'Downtown Route Assisting',
+        status: 'active',
+    },
+    {
+        id: 'ASG03',
+        workerId: 'WRK03',
+        vehicleId: 'VEH01',
+        date: format(subDays(today, 1), 'yyyy-MM-dd'),
+        taskDescription: 'Industrial Park Collection',
+        status: 'completed',
     }
 ];

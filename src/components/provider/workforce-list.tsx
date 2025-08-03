@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -175,3 +176,4 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
         </>
     );
 }
+

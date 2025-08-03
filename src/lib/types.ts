@@ -67,3 +67,14 @@ export type Worker = {
     imageUrl?: string;
     timesheet?: TimesheetEntry[];
 };
+
+export type AssignmentStatus = 'active' | 'completed';
+
+export type Assignment = {
+    id: string;
+    workerId: string;
+    vehicleId: string;
+    date: string;
+    taskDescription: string;
+    status: AssignmentStatus;
+};

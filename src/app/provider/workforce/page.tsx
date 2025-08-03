@@ -1,5 +1,7 @@
 import WorkforceList from '@/components/provider/workforce-list';
 import { DUMMY_WORKERS } from '@/lib/data';
+import ActiveAssignments from '@/components/provider/active-assignments';
+import { DUMMY_ASSIGNMENTS } from '@/lib/data';
 
 export default function ProviderWorkforcePage() {
     return (
@@ -8,6 +10,7 @@ export default function ProviderWorkforcePage() {
                 <h2 className="text-2xl font-bold mb-1">Workforce Management</h2>
                 <p className="text-muted-foreground">Manage your drivers, pickers, and other operational staff.</p>
             </div>
+            <ActiveAssignments initialAssignments={DUMMY_ASSIGNMENTS} workers={DUMMY_WORKERS} vehicles={DUMMY_VEHICLES} />
             <WorkforceList workers={DUMMY_WORKERS} />
         </div>
     );
