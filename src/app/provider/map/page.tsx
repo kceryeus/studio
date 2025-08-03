@@ -1,3 +1,5 @@
+"use client";
+
 import dynamic from 'next/dynamic';
 
 const CollectionMap = dynamic(() => import('@/components/provider/collection-map'), { 
