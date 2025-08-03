@@ -42,10 +42,6 @@ export default function ProviderMapPage() {
     }
   }
 
-  const clientsOnRoute = selectedRoute
-    ? DUMMY_CLIENTS.filter(c => c.routeId === selectedRoute.id && c.sharesLocation)
-    : [];
-
   const allVisibleClients = DUMMY_CLIENTS.filter(c => c.sharesLocation);
 
   return (
@@ -64,7 +60,7 @@ export default function ProviderMapPage() {
         <div className="lg:col-span-2 h-full min-h-[400px]">
           <CollectionMap 
               clients={allVisibleClients}
-              routeClients={clientsOnRoute}
+              route={selectedRoute}
               userLocation={userLocation}
           />
         </div>

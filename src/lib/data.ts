@@ -65,7 +65,7 @@ export const DUMMY_CLIENTS: Client[] = [
     id: 'CLI004',
     name: 'Ana Rodrigues',
     address: 'Av. da Marginal, 101, Maputo',
-    coordinates: { lat: -25.9845, lng: 32.6075 },
+    coordinates: { lat: -25.9845, lng: 32.5975 }, // Corrected longitude
     collectionStatus: 'suspended',
     paymentStatus: 'overdue',
     garbageStatus: 'missed',

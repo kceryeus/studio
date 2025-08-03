@@ -6,7 +6,7 @@ import Map, { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer
 import type { MapRef, LayerProps } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import type { Client, GarbageStatus } from "@/lib/types";
+import type { Client, GarbageStatus, Route } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -72,7 +72,7 @@ const routeLayer: LayerProps = {
   },
 };
 
-export default function CollectionMap({ clients, routeClients, userLocation }: { clients: Client[], routeClients: Client[], userLocation: [number, number] | null }) {
+export default function CollectionMap({ clients, route, userLocation }: { clients: Client[], route: Route | null, userLocation: [number, number] | null }) {
   const [clientData, setClientData] = React.useState<Client[]>(clients);
   const [dialogClient, setDialogClient] = React.useState<Client | null>(null);
   const [popupInfo, setPopupInfo] = React.useState<Client | null>(null);
@@ -81,14 +81,18 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const routeGeoJSON = routeClients.length > 1 ? {
-    type: 'Feature' as const,
-    properties: {},
-    geometry: {
-        type: 'LineString' as const,
-        coordinates: routeClients.map(c => [c.coordinates.lng, c.coordinates.lat])
+  const routeGeoJSON = React.useMemo(() => {
+    if (!route || !route.path || route.path.length < 2) return null;
+    return {
+        type: 'Feature' as const,
+        properties: {},
+        geometry: {
+            type: 'LineString' as const,
+            coordinates: route.path.map(p => [p.lng, p.lat])
+        }
     }
-  } : null;
+  }, [route]);
+
 
   React.useEffect(() => {
     if (userLocation && mapRef.current) {
@@ -165,7 +169,7 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
           >
             <div className="p-1 space-y-2">
                 <h3 className="font-bold text-base">{popupInfo.name}</h3>
-                <p className="text-xs text-muted-foreground">{popupInfo.address}</p>
+                <p className="text-xs text-muted-foreground">{popupinfo.address}</p>
                 <div className="flex items-center gap-2">
                 <span className="text-xs font-medium">{t('status')}:</span>
                 <Badge variant="outline" className="capitalize text-xs">

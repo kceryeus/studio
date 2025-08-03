@@ -1,3 +1,4 @@
+
 export type CollectionStatus = 'active' | 'suspended';
 export type PaymentStatus = 'paid' | 'due' | 'overdue';
 export type GarbageStatus = 'collected' | 'pending' | 'missed' | 'out' | 'not-out';
@@ -15,6 +16,7 @@ export type Route = {
     id: string;
     name: string;
     weekdays: DayOfWeek[];
+    path?: { lat: number, lng: number }[];
 };
 
 export type Client = {
