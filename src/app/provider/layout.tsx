@@ -20,7 +20,8 @@ import {
   LogOut,
   Home,
   Truck,
-  Users
+  Users,
+  BadgeDollarSign
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -96,6 +97,17 @@ export default function ProviderLayout({
                 <Link href="/provider/payments">
                   <CreditCard />
                   <span>Payments</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip={{ children: "Subscription", side: "right" }}
+              >
+                <Link href="/provider/subscribe">
+                  <BadgeDollarSign />
+                  <span>Subscription</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

@@ -18,7 +18,7 @@ export default function ProviderDashboardPage() {
                 <Info className="h-6 w-6 text-accent-foreground" />
                 <p className="text-sm text-accent-foreground">
                     You are currently on the free trial period. 
-                    <Link href="#" className="underline font-semibold ml-1">View subscription plans.</Link>
+                    <Link href="/provider/subscribe" className="underline font-semibold ml-1">View subscription plans.</Link>
                 </p>
             </div>
             <Button size="sm" variant="outline" className="bg-transparent border-accent-foreground text-accent-foreground hover:bg-accent-foreground/10" asChild>
