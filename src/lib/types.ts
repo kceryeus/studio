@@ -57,4 +57,5 @@ export type Worker = {
     status: WorkerStatus;
     assignedVehicleId: string | null;
     lastCheckIn: string | null;
+    imageUrl?: string;
 };

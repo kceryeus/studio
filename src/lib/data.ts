@@ -151,6 +151,7 @@ export const DUMMY_WORKERS: Worker[] = [
         status: 'working',
         assignedVehicleId: 'VEH02',
         lastCheckIn: '08:05 AM',
+        imageUrl: 'https://placehold.co/100x100.png'
     },
     {
         id: 'WRK02',
