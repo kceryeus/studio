@@ -169,7 +169,7 @@ export default function CollectionMap({ clients, route, userLocation }: { client
           >
             <div className="p-1 space-y-2">
                 <h3 className="font-bold text-base">{popupInfo.name}</h3>
-                <p className="text-xs text-muted-foreground">{popupinfo.address}</p>
+                <p className="text-xs text-muted-foreground">{popupInfo.address}</p>
                 <div className="flex items-center gap-2">
                 <span className="text-xs font-medium">{t('status')}:</span>
                 <Badge variant="outline" className="capitalize text-xs">
