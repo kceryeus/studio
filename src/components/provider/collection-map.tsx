@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { TileLayer, Marker, Popup } from "react-leaflet";
 import { DUMMY_CLIENTS } from "@/lib/data";
 import type { Client, GarbageStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,12 @@ const GarbageStatusIcon = ({
 };
 
 const mapCenter: L.LatLngExpression = [34.0522, -118.2437];
+
+// Dynamically import MapContainer to avoid SSR issues
+const MapContainer =
+  typeof window !== "undefined"
+    ? require("react-leaflet").MapContainer
+    : () => null;
 
 export default function CollectionMap() {
   const [clients, setClients] = useState<Client[]>(DUMMY_CLIENTS);
@@ -117,7 +123,7 @@ export default function CollectionMap() {
         zoom={13}
         style={{ height: "70vh", width: "100%" }}
         className="rounded-lg shadow-lg"
-        whenCreated={(mapInstance) => {
+        whenCreated={(mapInstance: L.Map) => {
           mapRef.current = mapInstance;
         }}
       >
