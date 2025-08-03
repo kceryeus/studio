@@ -1,3 +1,5 @@
+
+"use client"
 import Link from "next/link";
 import {
   SidebarProvider,
@@ -26,12 +28,14 @@ import {
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
+import { useLanguage } from "@/context/language-context";
 
 export default function ProviderLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { t } = useLanguage();
   return (
     <SidebarProvider>
       <Sidebar>
@@ -48,66 +52,66 @@ export default function ProviderLayout({
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                tooltip={{ children: "Dashboard", side: "right" }}
+                tooltip={{ children: t('dashboard'), side: "right" }}
               >
                 <Link href="/provider/dashboard">
                   <LayoutDashboard />
-                  <span>Dashboard</span>
+                  <span>{t('dashboard')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                tooltip={{ children: "Collection Map", side: "right" }}
+                tooltip={{ children: t('collection_map'), side: "right" }}
               >
                 <Link href="/provider/map">
                   <Map />
-                  <span>Collection Map</span>
+                  <span>{t('collection_map')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                tooltip={{ children: "Fleet", side: "right" }}
+                tooltip={{ children: t('fleet'), side: "right" }}
               >
                 <Link href="/provider/fleet">
                   <Truck />
-                  <span>Fleet</span>
+                  <span>{t('fleet')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                tooltip={{ children: "Workforce", side: "right" }}
+                tooltip={{ children: t('workforce'), side: "right" }}
               >
                 <Link href="/provider/workforce">
                   <Users />
-                  <span>Workforce</span>
+                  <span>{t('workforce')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                tooltip={{ children: "Payments", side: "right" }}
+                tooltip={{ children: t('payments'), side: "right" }}
               >
                 <Link href="/provider/payments">
                   <CreditCard />
-                  <span>Payments</span>
+                  <span>{t('payments')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                tooltip={{ children: "Subscription", side: "right" }}
+                tooltip={{ children: t('subscription'), side: "right" }}
               >
                 <Link href="/provider/subscribe">
                   <BadgeDollarSign />
-                  <span>Subscription</span>
+                  <span>{t('subscription')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -128,13 +132,13 @@ export default function ProviderLayout({
              <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
                 <Link href="/">
                     <Home />
-                    <span>Home Page</span>
+                    <span>{t('home_page')}</span>
                 </Link>
              </Button>
              <Button variant="ghost" size="sm" className="w-full justify-start text-red-500 hover:text-red-500 hover:bg-red-500/10" asChild>
                 <Link href="/">
                     <LogOut />
-                    <span>Logout</span>
+                    <span>{t('logout')}</span>
                 </Link>
              </Button>
           </div>
@@ -147,7 +151,7 @@ export default function ProviderLayout({
       <SidebarInset>
         <header className="flex items-center justify-between p-4 border-b">
           <SidebarTrigger />
-          <h1 className="text-xl font-semibold">Provider Dashboard</h1>
+          <h1 className="text-xl font-semibold">{t('provider_dashboard')}</h1>
         </header>
         <main className="p-4 bg-background">{children}</main>
       </SidebarInset>

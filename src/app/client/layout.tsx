@@ -1,3 +1,5 @@
+
+"use client"
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,12 +13,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/context/language-context";
 
 export default function ClientLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
@@ -31,13 +35,13 @@ export default function ClientLayout({
              <Button variant="ghost" asChild className="hidden md:inline-flex">
                 <Link href="/client/dashboard">
                     <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
+                    {t('dashboard')}
                 </Link>
              </Button>
              <Button asChild className="hidden md:inline-flex">
                 <Link href="/client/payment">
                     <DollarSign className="mr-2 h-4 w-4" />
-                    Make a Payment
+                    {t('make_payment')}
                 </Link>
              </Button>
             <DropdownMenu>
@@ -60,14 +64,14 @@ export default function ClientLayout({
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild className="md:hidden">
-                    <Link href="/client/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
+                    <Link href="/client/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> {t('dashboard')}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="md:hidden">
-                    <Link href="/client/payment"><DollarSign className="mr-2 h-4 w-4" /> Make Payment</Link>
+                    <Link href="/client/payment"><DollarSign className="mr-2 h-4 w-4" /> {t('make_payment')}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="md:hidden"/>
                 <DropdownMenuItem asChild>
-                    <Link href="/"><LogOut className="mr-2 h-4 w-4" /> Logout</Link>
+                    <Link href="/"><LogOut className="mr-2 h-4 w-4" /> {t('logout')}</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

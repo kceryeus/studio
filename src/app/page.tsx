@@ -1,28 +1,36 @@
+"use client"
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Truck, User, ArrowRight } from 'lucide-react';
 import { Logo } from '@/components/logo';
+import { LanguageToggle } from '@/components/language-toggle';
+import { useLanguage } from '@/context/language-context';
 
 export default function Home() {
+  const { t } = useLanguage();
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8">
+      <div className="absolute top-4 right-4">
+        <LanguageToggle />
+      </div>
       <div className="text-center mb-12">
         <Logo className="h-16 w-16 mx-auto mb-4" />
         <h1 className="text-5xl font-bold font-headline text-primary">
-          Welcome to RECOLIXO
+          {t('welcome_to_recolixo')}
         </h1>
         <p className="text-muted-foreground mt-2 text-lg">
-          The modern solution for waste management.
+          {t('modern_solution_for_waste_management')}
         </p>
       </div>
 
        <div className="flex gap-4 mb-12">
           <Button asChild>
-            <Link href="/login">Login</Link>
+            <Link href="/login">{t('login')}</Link>
           </Button>
           <Button asChild variant="secondary">
-            <Link href="/signup">Sign Up</Link>
+            <Link href="/signup">{t('sign_up')}</Link>
           </Button>
         </div>
 
@@ -34,18 +42,18 @@ export default function Home() {
                 <Truck className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-headline">Service Providers</CardTitle>
-                <CardDescription>Manage clients, routes, and payments.</CardDescription>
+                <CardTitle className="text-2xl font-headline">{t('service_providers')}</CardTitle>
+                <CardDescription>{t('manage_clients_routes_and_payments')}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-muted-foreground">
-              Access your dashboard to track collections, view client information on an interactive map, and manage financials.
+              {t('provider_description')}
             </p>
             <Button asChild className="w-full">
               <Link href="/provider/dashboard">
-                Go to Provider Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                {t('go_to_provider_dashboard')} <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </CardContent>
@@ -58,18 +66,18 @@ export default function Home() {
                 <User className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-headline">Clients</CardTitle>
-                <CardDescription>Track collections and manage payments.</CardDescription>
+                <CardTitle className="text-2xl font-headline">{t('clients')}</CardTitle>
+                <CardDescription>{t('track_collections_and_manage_payments')}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-muted-foreground">
-              View your collection schedule, report your garbage status, track your service in real-time, and handle payments easily.
+              {t('client_description')}
             </p>
             <Button asChild className="w-full">
               <Link href="/client/dashboard">
-                Go to Client Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                {t('go_to_client_dashboard')} <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </CardContent>

@@ -26,6 +26,8 @@ import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
 import { Logo } from "@/components/logo"
+import { useLanguage } from "@/context/language-context"
+import { LanguageToggle } from "@/components/language-toggle"
 
 const signupSchema = z.object({
   fullName: z.string().min(2, { message: "Full name is required." }),
@@ -39,6 +41,8 @@ const signupSchema = z.object({
 export default function SignupPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { t } = useLanguage()
+
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -51,20 +55,23 @@ export default function SignupPage() {
   function onSubmit(values: z.infer<typeof signupSchema>) {
     console.log(values)
     toast({
-      title: "Account Created!",
-      description: "You have successfully signed up. Redirecting to login...",
+      title: t('account_created'),
+      description: t('redirecting_to_login'),
     })
     router.push("/login")
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+       <div className="absolute top-4 right-4">
+        <LanguageToggle />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Logo className="mx-auto h-12 w-12 mb-4" />
-          <CardTitle className="text-2xl">Create an Account</CardTitle>
+          <CardTitle className="text-2xl">{t('create_account')}</CardTitle>
           <CardDescription>
-            Join RECOLIXO today. It's quick and easy.
+            {t('join_recolixo')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -75,7 +82,7 @@ export default function SignupPage() {
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel>{t('full_name')}</FormLabel>
                     <FormControl>
                       <Input placeholder="John Doe" {...field} />
                     </FormControl>
@@ -88,7 +95,7 @@ export default function SignupPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>{t('email')}</FormLabel>
                     <FormControl>
                       <Input placeholder="name@example.com" {...field} />
                     </FormControl>
@@ -101,7 +108,7 @@ export default function SignupPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>{t('password')}</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
@@ -114,7 +121,7 @@ export default function SignupPage() {
                 name="accountType"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
-                    <FormLabel>I am a...</FormLabel>
+                    <FormLabel>{t('i_am_a')}</FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
@@ -126,7 +133,7 @@ export default function SignupPage() {
                             <RadioGroupItem value="client" />
                           </FormControl>
                           <FormLabel className="font-normal">
-                            Client (I need garbage collection)
+                            {t('client_radio')}
                           </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-3 space-y-0">
@@ -134,7 +141,7 @@ export default function SignupPage() {
                             <RadioGroupItem value="provider" />
                           </FormControl>
                           <FormLabel className="font-normal">
-                            Service Provider (I offer collection services)
+                            {t('provider_radio')}
                           </FormLabel>
                         </FormItem>
                       </RadioGroup>
@@ -144,14 +151,14 @@ export default function SignupPage() {
                 )}
               />
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Creating Account..." : "Sign Up"}
+                {form.formState.isSubmitting ? t('creating_account') : t('sign_up')}
               </Button>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
-            Already have an account?{" "}
+            {t('already_have_account')}{" "}
             <Link href="/login" className="underline">
-              Login
+              {t('login')}
             </Link>
           </div>
         </CardContent>

@@ -24,6 +24,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { Logo } from "@/components/logo"
+import { useLanguage } from "@/context/language-context"
+import { LanguageToggle } from "@/components/language-toggle"
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -33,6 +35,8 @@ const loginSchema = z.object({
 export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { t } = useLanguage();
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -44,8 +48,8 @@ export default function LoginPage() {
   function onSubmit(values: z.infer<typeof loginSchema>) {
     console.log(values)
     toast({
-      title: "Login Successful",
-      description: "Redirecting to your dashboard...",
+      title: t('login_successful'),
+      description: t('redirecting_to_dashboard'),
     })
     // This is a mock login. In a real app, you'd check credentials
     // and redirect based on user type (client or provider).
@@ -58,12 +62,15 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageToggle />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Logo className="mx-auto h-12 w-12 mb-4" />
-          <CardTitle className="text-2xl">Login to RECOLIXO</CardTitle>
+          <CardTitle className="text-2xl">{t('login_to_recolixo')}</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account.
+            {t('enter_credentials')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -74,7 +81,7 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>{t('email')}</FormLabel>
                     <FormControl>
                       <Input placeholder="name@example.com" {...field} />
                     </FormControl>
@@ -87,7 +94,7 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>{t('password')}</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
@@ -96,14 +103,14 @@ export default function LoginPage() {
                 )}
               />
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Logging in..." : "Login"}
+                {form.formState.isSubmitting ? t('logging_in') : t('login')}
               </Button>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
-            Don't have an account?{" "}
+            {t('dont_have_account')}{" "}
             <Link href="/signup" className="underline">
-              Sign up
+              {t('sign_up')}
             </Link>
           </div>
         </CardContent>
