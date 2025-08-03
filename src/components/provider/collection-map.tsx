@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Map, { Marker, Popup, NavigationControl, FullscreenControl } from "react-map-gl";
-import type { MapRef } from "react-map-gl";
+import Map, { Marker, Popup, NavigationControl, FullscreenControl } from "react-map-gl/maplibre";
+import type { MapRef } from "react-map-gl/maplibre";
 import { DUMMY_CLIENTS } from "@/lib/data";
 import type { Client, GarbageStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
