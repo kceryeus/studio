@@ -5,8 +5,7 @@ import { useState, useEffect } from "react";
 import * as React from "react";
 import Map, { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer } from "react-map-gl/maplibre";
 import type { MapRef, LayerProps } from "react-map-gl/maplibre";
-import { DUMMY_CLIENTS } from "@/lib/data";
-import type { Client, GarbageStatus, Route } from "@/lib/types";
+import type { Client, GarbageStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -63,28 +62,26 @@ const routeLayer: LayerProps = {
     'line-cap': 'round',
   },
   paint: {
-    'line-color': '#468499', // Using hardcoded color to match --primary
+    'line-color': '#468499', 
     'line-width': 4,
     'line-opacity': 0.8
   },
 };
 
-export default function CollectionMap({ selectedRoute, userLocation }: { selectedRoute: Route | null, userLocation: [number, number] | null }) {
-  const [clients, setClients] = useState<Client[]>(DUMMY_CLIENTS);
+export default function CollectionMap({ clients, routeClients, userLocation }: { clients: Client[], routeClients: Client[], userLocation: [number, number] | null }) {
+  const [clientData, setClientData] = useState<Client[]>(clients);
   const [dialogClient, setDialogClient] = useState<Client | null>(null);
   const [popupInfo, setPopupInfo] = useState<Client | null>(null);
   const mapRef = React.useRef<MapRef>(null);
 
   const { toast } = useToast();
 
-  const clientsOnRoute = selectedRoute ? clients.filter(c => c.routeId === selectedRoute.id && c.sharesLocation) : [];
-
-  const routeGeoJSON = selectedRoute ? {
+  const routeGeoJSON = routeClients.length > 0 ? {
     type: 'Feature' as const,
     properties: {},
     geometry: {
         type: 'LineString' as const,
-        coordinates: clientsOnRoute.map(c => [c.coordinates.lng, c.coordinates.lat])
+        coordinates: routeClients.map(c => [c.coordinates.lng, c.coordinates.lat])
     }
   } : null;
 
@@ -96,7 +93,7 @@ export default function CollectionMap({ selectedRoute, userLocation }: { selecte
 
 
   const updateGarbageStatus = (clientId: string, status: GarbageStatus) => {
-    setClients((prevClients) =>
+    setClientData((prevClients) =>
       prevClients.map((client) =>
         client.id === clientId ? { ...client, garbageStatus: status } : client
       )
@@ -125,7 +122,7 @@ export default function CollectionMap({ selectedRoute, userLocation }: { selecte
         <FullscreenControl />
         <NavigationControl />
 
-        {clientsOnRoute.map((client) => (
+        {clientData.map((client) => (
           <Marker
             key={client.id}
             longitude={client.coordinates.lng}
@@ -135,7 +132,7 @@ export default function CollectionMap({ selectedRoute, userLocation }: { selecte
               setPopupInfo(client);
             }}
           >
-             <MapPin className="text-primary w-8 h-8" />
+             <MapPin className="text-primary w-8 h-8 cursor-pointer" />
           </Marker>
         ))}
 

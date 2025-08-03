@@ -2,9 +2,9 @@
 "use client";
 import CollectionMap from "@/components/provider/collection-map";
 import RouteManager from "@/components/provider/route-manager";
-import { DUMMY_ROUTES } from "@/lib/data";
+import { DUMMY_ROUTES, DUMMY_CLIENTS } from "@/lib/data";
 import { useState } from "react";
-import type { Route } from "@/lib/types";
+import type { Route, Client } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { LocateFixed } from "lucide-react";
 
@@ -28,6 +28,12 @@ export default function ProviderMapPage() {
     }
   };
 
+  const clientsOnRoute = selectedRoute
+    ? DUMMY_CLIENTS.filter(c => c.routeId === selectedRoute.id && c.sharesLocation)
+    : [];
+
+  const allVisibleClients = DUMMY_CLIENTS.filter(c => c.sharesLocation);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
       <div className="lg:col-span-3">
@@ -42,7 +48,8 @@ export default function ProviderMapPage() {
             </Button>
         </div>
         <CollectionMap 
-            selectedRoute={selectedRoute} 
+            clients={allVisibleClients}
+            routeClients={clientsOnRoute}
             userLocation={userLocation}
         />
       </div>
