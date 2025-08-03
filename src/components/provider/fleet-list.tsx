@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -9,12 +10,14 @@ import { Truck, Fuel, Wrench, Calendar, Dot, Info, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { useLanguage } from '@/context/language-context';
 
 const VehicleStatusBadge = ({ status }: { status: 'in-use' | 'maintenance' | 'available' }) => {
+    const { t } = useLanguage();
     const text = {
-        'in-use': 'In Use',
-        'maintenance': 'Maintenance',
-        'available': 'Available',
+        'in-use': t('in_use'),
+        'maintenance': t('maintenance'),
+        'available': t('available'),
     }[status];
 
     const color = {
@@ -38,6 +41,7 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
     const [currentStatus, setCurrentStatus] = useState<VehicleStatus>('available');
+    const { t } = useLanguage();
 
     const handleUpdateStatus = () => {
         if (selectedVehicle) {
@@ -65,26 +69,26 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground flex items-center gap-2"><Fuel className="w-4 h-4" /> Fuel Type</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><Fuel className="w-4 h-4" /> {t('fuel_type')}</span>
                                 <span className="font-medium">{vehicle.fuelType}</span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground flex items-center gap-2"><Wrench className="w-4 h-4" /> Capacity</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><Wrench className="w-4 h-4" /> {t('capacity')}</span>
                                 <span className="font-medium">{vehicle.capacity} kg</span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-4 h-4" /> Next Maintenance</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-4 h-4" /> {t('next_maintenance')}</span>
                                 <span className="font-medium">{vehicle.nextMaintenance}</span>
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-end gap-2">
                             <Button variant="outline" size="sm" onClick={() => { setSelectedVehicle(vehicle); setIsDetailsModalOpen(true); }}>
                                 <Info className="mr-2 h-4 w-4" />
-                                View Details
+                                {t('view_details')}
                             </Button>
                             <Button size="sm" onClick={() => { setSelectedVehicle(vehicle); setCurrentStatus(vehicle.status); setIsStatusModalOpen(true); }}>
                                 <Edit className="mr-2 h-4 w-4" />
-                                Update Status
+                                {t('update_status')}
                             </Button>
                         </CardFooter>
                     </Card>
@@ -95,18 +99,18 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
             <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Vehicle Details: {selectedVehicle?.licensePlate}</DialogTitle>
+                        <DialogTitle>{t('vehicle_details_title')}: {selectedVehicle?.licensePlate}</DialogTitle>
                         <DialogDescription>
-                            Complete information for {selectedVehicle?.type}.
+                            {t('vehicle_details_desc')} {selectedVehicle?.type}.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                        <div className="flex justify-between"><strong>License Plate:</strong> <span>{selectedVehicle?.licensePlate}</span></div>
-                        <div className="flex justify-between"><strong>Type:</strong> <span>{selectedVehicle?.type}</span></div>
-                        <div className="flex justify-between"><strong>Fuel Type:</strong> <span>{selectedVehicle?.fuelType}</span></div>
-                        <div className="flex justify-between"><strong>Capacity:</strong> <span>{selectedVehicle?.capacity} kg</span></div>
-                        <div className="flex justify-between"><strong>Next Maintenance:</strong> <span>{selectedVehicle?.nextMaintenance}</span></div>
-                        <div className="flex justify-between items-center"><strong>Status:</strong> <VehicleStatusBadge status={selectedVehicle?.status || 'available'} /></div>
+                        <div className="flex justify-between"><strong>{t('license_plate')}:</strong> <span>{selectedVehicle?.licensePlate}</span></div>
+                        <div className="flex justify-between"><strong>{t('type')}:</strong> <span>{selectedVehicle?.type}</span></div>
+                        <div className="flex justify-between"><strong>{t('fuel_type')}:</strong> <span>{selectedVehicle?.fuelType}</span></div>
+                        <div className="flex justify-between"><strong>{t('capacity')}:</strong> <span>{selectedVehicle?.capacity} kg</span></div>
+                        <div className="flex justify-between"><strong>{t('next_maintenance')}:</strong> <span>{selectedVehicle?.nextMaintenance}</span></div>
+                        <div className="flex justify-between items-center"><strong>{t('status')}:</strong> <VehicleStatusBadge status={selectedVehicle?.status || 'available'} /></div>
                     </div>
                 </DialogContent>
             </Dialog>
@@ -115,29 +119,29 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
             <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Update Status: {selectedVehicle?.licensePlate}</DialogTitle>
+                        <DialogTitle>{t('update_status_title')}: {selectedVehicle?.licensePlate}</DialogTitle>
                         <DialogDescription>
-                            Change the availability status for this vehicle.
+                            {t('update_status_desc')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                        <Label htmlFor="status-select">Status</Label>
+                        <Label htmlFor="status-select">{t('status')}</Label>
                         <Select value={currentStatus} onValueChange={(value) => setCurrentStatus(value as VehicleStatus)}>
                             <SelectTrigger id="status-select">
-                                <SelectValue placeholder="Select status" />
+                                <SelectValue placeholder={t('select_status')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="available">Available</SelectItem>
-                                <SelectItem value="in-use">In Use</SelectItem>
-                                <SelectItem value="maintenance">Maintenance</SelectItem>
+                                <SelectItem value="available">{t('available')}</SelectItem>
+                                <SelectItem value="in-use">{t('in_use')}</SelectItem>
+                                <SelectItem value="maintenance">{t('maintenance')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline">{t('cancel')}</Button>
                         </DialogClose>
-                        <Button onClick={handleUpdateStatus}>Save Changes</Button>
+                        <Button onClick={handleUpdateStatus}>{t('save_changes')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

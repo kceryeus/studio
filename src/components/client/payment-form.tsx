@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from 'react-hook-form';
@@ -10,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { CreditCard, User, Calendar } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
 
 const paymentSchema = z.object({
     amount: z.coerce.number().min(1, { message: 'Amount must be at least 1 MT.' }),
@@ -21,6 +23,7 @@ const paymentSchema = z.object({
 
 export default function PaymentForm({ client }: { client: Client }) {
     const { toast } = useToast();
+    const { t } = useLanguage();
     const form = useForm<z.infer<typeof paymentSchema>>({
         resolver: zodResolver(paymentSchema),
         defaultValues: {
@@ -35,8 +38,8 @@ export default function PaymentForm({ client }: { client: Client }) {
     function onSubmit(values: z.infer<typeof paymentSchema>) {
         console.log(values);
         toast({
-            title: 'Payment Successful',
-            description: `Your payment of ${values.amount.toFixed(2)} MT has been processed.`,
+            title: t('payment_successful_title'),
+            description: `${t('payment_successful_desc')} ${values.amount.toFixed(2)} MT.`,
         });
         form.reset({
             ...form.getValues(),
@@ -50,8 +53,8 @@ export default function PaymentForm({ client }: { client: Client }) {
     return (
         <Card className="mt-6">
             <CardHeader>
-                <CardTitle>Payment Details</CardTitle>
-                <CardDescription>Enter your payment information below. Your current balance is <span className="font-bold text-primary">{client.balance.toFixed(2)} MT</span>.</CardDescription>
+                <CardTitle>{t('payment_details')}</CardTitle>
+                <CardDescription>{t('payment_details_desc_1')} <span className="font-bold text-primary">{client.balance.toFixed(2)} MT</span>.</CardDescription>
             </CardHeader>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -61,7 +64,7 @@ export default function PaymentForm({ client }: { client: Client }) {
                             name="amount"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Payment Amount (MT)</FormLabel>
+                                    <FormLabel>{t('payment_amount_mt')}</FormLabel>
                                     <FormControl>
                                        <div className="relative">
                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">MT</span>
@@ -77,7 +80,7 @@ export default function PaymentForm({ client }: { client: Client }) {
                             name="cardholderName"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Cardholder Name</FormLabel>
+                                    <FormLabel>{t('cardholder_name')}</FormLabel>
                                     <FormControl>
                                        <div className="relative">
                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -93,7 +96,7 @@ export default function PaymentForm({ client }: { client: Client }) {
                             name="cardNumber"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Card Number</FormLabel>
+                                    <FormLabel>{t('card_number')}</FormLabel>
                                     <FormControl>
                                        <div className="relative">
                                            <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -110,7 +113,7 @@ export default function PaymentForm({ client }: { client: Client }) {
                                 name="expiryDate"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Expiry Date</FormLabel>
+                                        <FormLabel>{t('expiry_date')}</FormLabel>
                                         <FormControl>
                                             <div className="relative">
                                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -126,7 +129,7 @@ export default function PaymentForm({ client }: { client: Client }) {
                                 name="cvc"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>CVC</FormLabel>
+                                        <FormLabel>{t('cvc')}</FormLabel>
                                         <FormControl>
                                            <div className="relative">
                                                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -141,7 +144,7 @@ export default function PaymentForm({ client }: { client: Client }) {
                     </CardContent>
                     <CardFooter>
                          <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                            {form.formState.isSubmitting ? 'Processing...' : 'Pay Now'}
+                            {form.formState.isSubmitting ? t('processing') : t('pay_now')}
                         </Button>
                     </CardFooter>
                 </form>

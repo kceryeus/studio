@@ -1,16 +1,19 @@
+
 "use client";
 
 import { useMemo } from 'react';
 import { DUMMY_CLIENTS } from '@/lib/data';
-import type { Client, PaymentStatus } from '@/lib/data';
+import type { PaymentStatus } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { subMonths, format, startOfMonth } from 'date-fns';
+import { useLanguage } from '@/context/language-context';
 
 const PaymentBadge = ({ status }: { status: PaymentStatus }) => {
+    const { t } = useLanguage();
   const variant = {
     paid: 'secondary',
     due: 'outline',
@@ -18,12 +21,13 @@ const PaymentBadge = ({ status }: { status: PaymentStatus }) => {
   }[status] as 'secondary' | 'outline' | 'destructive';
   return (
     <Badge variant={variant} className="capitalize">
-      {status}
+      {t(status)}
     </Badge>
   );
 };
 
 export default function PaymentReports() {
+    const { t } = useLanguage();
     
     const chartData = useMemo(() => {
         const data = Array.from({ length: 6 }).map((_, i) => {
@@ -54,7 +58,7 @@ export default function PaymentReports() {
 
     const chartConfig = {
       total: {
-        label: 'Total',
+        label: t('total'),
         color: 'hsl(var(--primary))',
       },
     };
@@ -65,17 +69,17 @@ export default function PaymentReports() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
             <CardHeader>
-                <CardTitle>Client Payment Status</CardTitle>
-                <CardDescription>Detailed overview of all client payments and balances.</CardDescription>
+                <CardTitle>{t('client_payment_status_title')}</CardTitle>
+                <CardDescription>{t('client_payment_status_subtitle')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Client</TableHead>
-                            <TableHead>Payment Status</TableHead>
-                            <TableHead className="text-right">Balance</TableHead>
-                            <TableHead>Next Due Date</TableHead>
+                            <TableHead>{t('client')}</TableHead>
+                            <TableHead>{t('payment_status')}</TableHead>
+                            <TableHead className="text-right">{t('balance')}</TableHead>
+                            <TableHead>{t('next_due_date')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -94,8 +98,8 @@ export default function PaymentReports() {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Revenue Overview</CardTitle>
-                    <CardDescription>Monthly revenue from paid invoices.</CardDescription>
+                    <CardTitle>{t('revenue_overview')}</CardTitle>
+                    <CardDescription>{t('revenue_overview_subtitle')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ChartContainer config={chartConfig} className="h-64 w-full">
@@ -118,11 +122,11 @@ export default function PaymentReports() {
             </Card>
              <Card>
                 <CardHeader>
-                    <CardTitle>Total Outstanding Balance</CardTitle>
+                    <CardTitle>{t('total_outstanding_balance')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <p className="text-3xl font-bold text-destructive">{totalBalanceDue.toFixed(2)} MT</p>
-                    <p className="text-xs text-muted-foreground">Across all clients with due or overdue payments.</p>
+                    <p className="text-xs text-muted-foreground">{t('total_outstanding_balance_subtitle')}</p>
                 </CardContent>
             </Card>
         </div>

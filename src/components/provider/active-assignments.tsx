@@ -9,12 +9,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/context/language-context';
 
 const AssignmentStatusBadge = ({ status }: { status: AssignmentStatus }) => {
+    const { t } = useLanguage();
     return (
         <Badge variant={status === 'active' ? 'default' : 'secondary'} className="capitalize">
             {status === 'active' ? <Zap className="mr-1 h-3 w-3" /> : <CheckCircle className="mr-1 h-3 w-3" />}
-            {status}
+            {t(status)}
         </Badge>
     );
 };
@@ -30,6 +32,7 @@ export default function ActiveAssignments({
 }) {
     const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments);
     const { toast } = useToast();
+    const { t } = useLanguage();
 
     const getWorkerName = (workerId: string) => workers.find(w => w.id === workerId)?.name || 'Unknown';
     const getVehiclePlate = (vehicleId: string) => vehicles.find(v => v.id === vehicleId)?.licensePlate || 'N/A';
@@ -41,8 +44,8 @@ export default function ActiveAssignments({
             )
         );
         toast({
-            title: "Assignment Completed",
-            description: "The task has been marked as complete.",
+            title: t('assignment_completed_title'),
+            description: t('assignment_completed_desc'),
         });
     };
     
@@ -51,18 +54,18 @@ export default function ActiveAssignments({
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Active Assignments</CardTitle>
-                <CardDescription>A list of tasks currently being performed by your workforce.</CardDescription>
+                <CardTitle>{t('active_assignments_title')}</CardTitle>
+                <CardDescription>{t('active_assignments_subtitle')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Worker</TableHead>
-                            <TableHead>Vehicle</TableHead>
-                            <TableHead>Task</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
+                            <TableHead>{t('worker')}</TableHead>
+                            <TableHead>{t('vehicle')}</TableHead>
+                            <TableHead>{t('task')}</TableHead>
+                            <TableHead>{t('status')}</TableHead>
+                            <TableHead className="text-right">{t('action')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -80,7 +83,7 @@ export default function ActiveAssignments({
                                         onClick={() => handleMarkAsComplete(assignment.id)}
                                         disabled={assignment.status === 'completed'}
                                     >
-                                        Mark as Complete
+                                        {t('mark_as_complete')}
                                     </Button>
                                 </TableCell>
                             </TableRow>
@@ -88,7 +91,7 @@ export default function ActiveAssignments({
                         {activeAssignments.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center text-muted-foreground">
-                                    No active assignments.
+                                    {t('no_active_assignments')}
                                 </TableCell>
                             </TableRow>
                         )}
@@ -98,4 +101,3 @@ export default function ActiveAssignments({
         </Card>
     );
 }
-

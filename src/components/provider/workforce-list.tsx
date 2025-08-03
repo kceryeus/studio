@@ -13,12 +13,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useLanguage } from '@/context/language-context';
 
 const WorkerStatusBadge = ({ status }: { status: 'working' | 'on-leave' }) => {
+    const { t } = useLanguage();
     return (
         <Badge variant={status === 'working' ? 'secondary' : 'outline'} className="capitalize">
             {status === 'working' ? <CheckCircle className="mr-1 h-3 w-3 text-green-500" /> : <XCircle className="mr-1 h-3 w-3 text-red-500" />}
-            {status.replace('-', ' ')}
+            {t(status).replace('-', ' ')}
         </Badge>
     );
 };
@@ -30,6 +32,7 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
     const [isTimesheetModalOpen, setIsTimesheetModalOpen] = useState(false);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [assignedVehicleId, setAssignedVehicleId] = useState<string | null>(null);
+    const { t } = useLanguage();
 
     const handleAssignVehicle = () => {
         if (selectedWorker) {
@@ -59,7 +62,7 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
                                     </Avatar>
                                     <div>
                                         <CardTitle>{worker.name}</CardTitle>
-                                        <CardDescription>{worker.role}</CardDescription>
+                                        <CardDescription>{t(worker.role as any)}</CardDescription>
                                     </div>
                                 </div>
                                  <WorkerStatusBadge status={worker.status} />
@@ -67,30 +70,30 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground flex items-center gap-2"><Briefcase className="w-4 h-4" /> Employment</span>
-                                <span className="font-medium capitalize">{worker.employmentType}</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><Briefcase className="w-4 h-4" /> {t('employment')}</span>
+                                <span className="font-medium capitalize">{t(worker.employmentType)}</span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground flex items-center gap-2"><DollarSign className="w-4 h-4" /> Wage</span>
-                                <span className="font-medium">{worker.wage.toFixed(2)} MT / hour</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><DollarSign className="w-4 h-4" /> {t('wage')}</span>
+                                <span className="font-medium">{worker.wage.toFixed(2)} MT / {t('hour')}</span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground flex items-center gap-2"><Clock className="w-4 h-4" /> Last Check-in</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><Clock className="w-4 h-4" /> {t('last_check_in')}</span>
                                 <span className="font-medium">{worker.lastCheckIn ?? 'N/A'}</span>
                             </div>
                              <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground flex items-center gap-2"><Truck className="w-4 h-4" /> Assigned Vehicle</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><Truck className="w-4 h-4" /> {t('assigned_vehicle')}</span>
                                 <span className="font-medium">{worker.assignedVehicleId ?? 'N/A'}</span>
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-end gap-2">
                             <Button variant="outline" size="sm" onClick={() => { setSelectedWorker(worker); setIsTimesheetModalOpen(true); }}>
                                 <Calendar className="mr-2 h-4 w-4" />
-                                View Timesheet
+                                {t('view_timesheet')}
                             </Button>
                             <Button size="sm" onClick={() => { setSelectedWorker(worker); setAssignedVehicleId(worker.assignedVehicleId); setIsAssignModalOpen(true);}}>
                                 <Pencil className="mr-2 h-4 w-4" />
-                                Assign Task
+                                {t('assign_task')}
                             </Button>
                         </CardFooter>
                     </Card>
@@ -101,19 +104,19 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
             <Dialog open={isTimesheetModalOpen} onOpenChange={setIsTimesheetModalOpen}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Timesheet for {selectedWorker?.name}</DialogTitle>
+                        <DialogTitle>{t('timesheet_for')} {selectedWorker?.name}</DialogTitle>
                         <DialogDescription>
-                            Recent check-in and check-out times for the current month.
+                            {t('timesheet_desc')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Check In</TableHead>
-                                    <TableHead>Check Out</TableHead>
-                                    <TableHead className="text-right">Total Hours</TableHead>
+                                    <TableHead>{t('date')}</TableHead>
+                                    <TableHead>{t('check_in')}</TableHead>
+                                    <TableHead>{t('check_out')}</TableHead>
+                                    <TableHead className="text-right">{t('total_hours')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -127,16 +130,16 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
                                 ))}
                                 {!selectedWorker?.timesheet?.length && (
                                      <TableRow>
-                                        <TableCell colSpan={4} className="text-center text-muted-foreground">No timesheet entries found.</TableCell>
+                                        <TableCell colSpan={4} className="text-center text-muted-foreground">{t('no_timesheet_entries')}</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
                         </Table>
                     </div>
                      <DialogFooter className="sm:justify-between">
-                        <div className="font-bold">Total Monthly Hours: {totalHours.toFixed(1)}</div>
+                        <div className="font-bold">{t('total_monthly_hours')}: {totalHours.toFixed(1)}</div>
                         <DialogClose asChild>
-                            <Button variant="outline">Close</Button>
+                            <Button variant="outline">{t('close')}</Button>
                         </DialogClose>
                     </DialogFooter>
                 </DialogContent>
@@ -146,19 +149,19 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
             <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Assign Task to {selectedWorker?.name}</DialogTitle>
+                        <DialogTitle>{t('assign_task_to')} {selectedWorker?.name}</DialogTitle>
                         <DialogDescription>
-                            Assign a vehicle for the current shift.
+                            {t('assign_task_desc')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                        <Label htmlFor="vehicle-select">Assign Vehicle</Label>
+                        <Label htmlFor="vehicle-select">{t('assign_vehicle')}</Label>
                         <Select value={assignedVehicleId || ''} onValueChange={(value) => setAssignedVehicleId(value)}>
                             <SelectTrigger id="vehicle-select">
-                                <SelectValue placeholder="Select a vehicle" />
+                                <SelectValue placeholder={t('select_a_vehicle')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="null">None</SelectItem>
+                                <SelectItem value="null">{t('none')}</SelectItem>
                                 {vehicles.filter(v => v.status === 'available' || v.id === selectedWorker?.assignedVehicleId).map(vehicle => (
                                     <SelectItem key={vehicle.id} value={vehicle.id}>{vehicle.licensePlate} ({vehicle.type})</SelectItem>
                                 ))}
@@ -167,13 +170,12 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
                     </div>
                      <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline">{t('cancel')}</Button>
                         </DialogClose>
-                        <Button onClick={handleAssignVehicle}>Save Assignment</Button>
+                        <Button onClick={handleAssignVehicle}>{t('save_assignment')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
         </>
     );
 }
-

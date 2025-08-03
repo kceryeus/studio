@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
 import * as React from "react";
 import Map, { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer } from "react-map-gl/maplibre";
 import type { MapRef, LayerProps } from "react-map-gl/maplibre";
@@ -18,6 +17,7 @@ import {
   UserCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/context/language-context";
 
 import {
   Dialog,
@@ -69,12 +69,13 @@ const routeLayer: LayerProps = {
 };
 
 export default function CollectionMap({ clients, routeClients, userLocation }: { clients: Client[], routeClients: Client[], userLocation: [number, number] | null }) {
-  const [clientData, setClientData] = useState<Client[]>(clients);
-  const [dialogClient, setDialogClient] = useState<Client | null>(null);
-  const [popupInfo, setPopupInfo] = useState<Client | null>(null);
+  const [clientData, setClientData] = React.useState<Client[]>(clients);
+  const [dialogClient, setDialogClient] = React.useState<Client | null>(null);
+  const [popupInfo, setPopupInfo] = React.useState<Client | null>(null);
   const mapRef = React.useRef<MapRef>(null);
 
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const routeGeoJSON = routeClients.length > 0 ? {
     type: 'Feature' as const,
@@ -85,7 +86,7 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
     }
   } : null;
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (userLocation && mapRef.current) {
       mapRef.current.flyTo({ center: [userLocation[1], userLocation[0]], zoom: 14 });
     }
@@ -99,8 +100,8 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
       )
     );
     toast({
-      title: "Status Updated",
-      description: `Client's status set to ${status}.`,
+      title: t('status_updated'),
+      description: `${t('client_status_set_to')} ${t(status)}.`,
     });
     setDialogClient(null);
   };
@@ -161,9 +162,9 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
                 <h3 className="font-bold text-lg">{popupInfo.name}</h3>
                 <p className="text-sm text-muted-foreground">{popupInfo.address}</p>
                 <div className="flex items-center gap-2">
-                <span className="text-sm">Status:</span>
+                <span className="text-sm">{t('status')}:</span>
                 <Badge variant="outline" className="capitalize">
-                    {popupInfo.garbageStatus.replace("-", " ")}
+                    {t(popupInfo.garbageStatus).replace("-", " ")}
                 </Badge>
                 <GarbageStatusIcon status={popupInfo.garbageStatus} />
                 </div>
@@ -173,7 +174,7 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
                     size="sm"
                     onClick={() => setDialogClient(popupInfo)}
                 >
-                    Update Status
+                    {t('update_status')}
                 </Button>
                 </div>
             </div>
@@ -184,9 +185,9 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
       <Dialog open={!!dialogClient} onOpenChange={() => setDialogClient(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Update Status</DialogTitle>
+            <DialogTitle>{t('update_status')}</DialogTitle>
             <DialogDescription>
-              Change garbage status for{" "}
+              {t('update_status_desc_1')}{" "}
               <strong>{dialogClient?.name}</strong>.
             </DialogDescription>
           </DialogHeader>
@@ -200,7 +201,7 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
                 updateGarbageStatus(dialogClient.id, "collected")
               }
             >
-              Collected
+              {t('collected')}
             </Button>
             <Button
               size="sm"
@@ -210,7 +211,7 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
                 updateGarbageStatus(dialogClient.id, "missed")
               }
             >
-              Missed
+              {t('missed')}
             </Button>
             <Button
               size="sm"
@@ -220,7 +221,7 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
                 updateGarbageStatus(dialogClient.id, "not-out")
               }
             >
-              Not Out
+              {t('not_out')}
             </Button>
             <Button
               size="sm"
@@ -230,7 +231,7 @@ export default function CollectionMap({ clients, routeClients, userLocation }: {
                 updateGarbageStatus(dialogClient.id, "pending")
               }
             >
-              Pending
+              {t('pending')}
             </Button>
           </div>
         </DialogContent>

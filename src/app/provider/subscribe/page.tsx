@@ -1,56 +1,61 @@
+
+"use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
 import Link from "next/link";
-
-const plans = [
-    {
-        name: "Plano Prático",
-        price: "200 MT",
-        pricePeriod: "/mês",
-        description: "Ideal for getting started and managing essential client information.",
-        features: [
-            "Client Information Dashboard",
-            "Payment Tracking",
-        ],
-        cta: "Subscribe Now",
-        link: "https://paysuite.tech/checkout/c3fe5a91-78ea-4ddc-8d92-e9de67dcceb9"
-    },
-    {
-        name: "Plano Gestão",
-        price: "300 MT",
-        pricePeriod: "/mês",
-        description: "Perfect for optimizing routes and visualizing your operations.",
-        features: [
-            "All features from Prático",
-            "Interactive Collection Map",
-            "Route Management",
-        ],
-        cta: "Subscribe Now",
-        link: "https://paysuite.tech/checkout/c3fe5a91-78ea-4ddc-8d92-e9de67dcceb9"
-    },
-    {
-        name: "Plano Total",
-        price: "1500 MT",
-        pricePeriod: "/mês",
-        description: "The complete solution for managing your entire waste collection business.",
-        features: [
-            "All features from Gestão",
-            "Fleet Management",
-            "Workforce Management",
-            "Advanced Reporting",
-        ],
-        cta: "Subscribe Now",
-        link: "https://paysuite.tech/checkout/c3fe5a91-78ea-4ddc-8d92-e9de67dcceb9"
-    },
-]
+import { useLanguage } from "@/context/language-context";
 
 export default function SubscribePage() {
+    const { t } = useLanguage();
+
+    const plans = [
+        {
+            name: "Plano Prático",
+            price: "200 MT",
+            pricePeriod: t('per_month'),
+            description: t('plan_pratico_description'),
+            features: [
+                t('plan_pratico_feature1'),
+                t('plan_pratico_feature2'),
+            ],
+            cta: t('subscribe_now'),
+            link: "https://paysuite.tech/checkout/c3fe5a91-78ea-4ddc-8d92-e9de67dcceb9"
+        },
+        {
+            name: "Plano Gestão",
+            price: "300 MT",
+            pricePeriod: t('per_month'),
+            description: t('plan_gestao_description'),
+            features: [
+                t('plan_gestao_feature1'),
+                t('plan_gestao_feature2'),
+                t('plan_gestao_feature3'),
+            ],
+            cta: t('subscribe_now'),
+            link: "https://paysuite.tech/checkout/c3fe5a91-78ea-4ddc-8d92-e9de67dcceb9"
+        },
+        {
+            name: "Plano Total",
+            price: "1500 MT",
+            pricePeriod: t('per_month'),
+            description: t('plan_total_description'),
+            features: [
+                t('plan_total_feature1'),
+                t('plan_total_feature2'),
+                t('plan_total_feature3'),
+                t('plan_total_feature4'),
+            ],
+            cta: t('subscribe_now'),
+            link: "https://paysuite.tech/checkout/c3fe5a91-78ea-4ddc-8d92-e9de67dcceb9"
+        },
+    ]
+
     return (
         <div className="space-y-6">
             <div className="text-center">
-                <h1 className="text-4xl font-bold font-headline">Our Subscription Plans</h1>
-                <p className="text-muted-foreground mt-2">Choose the plan that's right for your business.</p>
+                <h1 className="text-4xl font-bold font-headline">{t('subscription_page_title')}</h1>
+                <p className="text-muted-foreground mt-2">{t('subscription_page_subtitle')}</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                 {plans.map((plan) => (

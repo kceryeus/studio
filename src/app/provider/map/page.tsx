@@ -3,12 +3,14 @@
 import CollectionMap from "@/components/provider/collection-map";
 import RouteManager from "@/components/provider/route-manager";
 import { DUMMY_ROUTES, DUMMY_CLIENTS } from "@/lib/data";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Route, Client } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { LocateFixed } from "lucide-react";
+import { useLanguage } from "@/context/language-context";
 
 export default function ProviderMapPage() {
+  const { t } = useLanguage();
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(DUMMY_ROUTES[0]);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
@@ -20,11 +22,11 @@ export default function ProviderMapPage() {
         },
         (error) => {
           console.error("Error getting user location:", error);
-          alert("Could not get your location. Please ensure you have enabled location services.");
+          alert(t('alert_location_error'));
         }
       );
     } else {
-      alert("Geolocation is not supported by this browser.");
+      alert(t('alert_geolocation_not_supported'));
     }
   };
 
@@ -39,12 +41,12 @@ export default function ProviderMapPage() {
       <div className="lg:col-span-3">
         <div className="flex justify-between items-center mb-4">
             <div>
-                <h2 className="text-2xl font-bold">Interactive Collection Map</h2>
-                <p className="text-muted-foreground">Visualize client locations and routes.</p>
+                <h2 className="text-2xl font-bold">{t('map_title')}</h2>
+                <p className="text-muted-foreground">{t('map_subtitle')}</p>
             </div>
             <Button variant="outline" onClick={handleLocateUser}>
                 <LocateFixed className="mr-2 h-4 w-4" />
-                My Location
+                {t('my_location')}
             </Button>
         </div>
         <CollectionMap 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -8,17 +9,20 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { User, MapPin, CircleDollarSign, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
 
 const StatusBadge = ({ status }: { status: 'active' | 'suspended' }) => {
+    const { t } = useLanguage();
   return (
     <Badge variant={status === 'active' ? 'default' : 'destructive'} className="capitalize bg-opacity-20 text-opacity-100 border-opacity-30">
         {status === 'active' ? <ShieldCheck className="w-3 h-3 mr-1" /> : <ShieldAlert className="w-3 h-3 mr-1" />}
-        {status}
+        {t(status)}
     </Badge>
   );
 };
 
 const PaymentBadge = ({ status }: { status: 'paid' | 'due' | 'overdue' }) => {
+    const { t } = useLanguage();
   const variant = {
     paid: 'secondary',
     due: 'outline',
@@ -26,7 +30,7 @@ const PaymentBadge = ({ status }: { status: 'paid' | 'due' | 'overdue' }) => {
   }[status] as 'secondary' | 'outline' | 'destructive';
   return (
     <Badge variant={variant} className="capitalize">
-      {status}
+      {t(status)}
     </Badge>
   );
 };
@@ -37,6 +41,7 @@ export default function ClientList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [collectionFilter, setCollectionFilter] = useState<CollectionStatus | 'all'>('all');
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | 'all'>('all');
+  const { t } = useLanguage();
 
   const filteredClients = useMemo(() => {
     return clients.filter(client => {
@@ -50,11 +55,11 @@ export default function ClientList() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Client Management</CardTitle>
-        <CardDescription>View, filter, and manage your clients.</CardDescription>
+        <CardTitle>{t('client_management_title')}</CardTitle>
+        <CardDescription>{t('client_management_subtitle')}</CardDescription>
         <div className="flex flex-col md:flex-row gap-4 pt-4">
           <Input 
-            placeholder="Search by name or address..."
+            placeholder={t('search_by_name_or_address')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
@@ -62,23 +67,23 @@ export default function ClientList() {
           <div className="flex gap-4">
             <Select value={collectionFilter} onValueChange={(value) => setCollectionFilter(value as CollectionStatus | 'all')}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Collection Status" />
+                <SelectValue placeholder={t('collection_status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Collection Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
+                <SelectItem value="all">{t('all_collection_status')}</SelectItem>
+                <SelectItem value="active">{t('active')}</SelectItem>
+                <SelectItem value="suspended">{t('suspended')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={paymentFilter} onValueChange={(value) => setPaymentFilter(value as PaymentStatus | 'all')}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Payment Status" />
+                <SelectValue placeholder={t('payment_status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Payment Status</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="due">Due</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
+                <SelectItem value="all">{t('all_payment_status')}</SelectItem>
+                <SelectItem value="paid">{t('paid')}</SelectItem>
+                <SelectItem value="due">{t('due')}</SelectItem>
+                <SelectItem value="overdue">{t('overdue')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -99,11 +104,11 @@ export default function ClientList() {
               </CardHeader>
               <CardContent className="space-y-2">
                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground flex items-center gap-2"><CircleDollarSign className="w-4 h-4" /> Payment Status</span>
+                    <span className="text-muted-foreground flex items-center gap-2"><CircleDollarSign className="w-4 h-4" /> {t('payment_status')}</span>
                     <PaymentBadge status={client.paymentStatus} />
                  </div>
                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Balance</span>
+                    <span className="text-muted-foreground">{t('balance')}</span>
                     <span className="font-medium">{client.balance.toFixed(2)} MT</span>
                  </div>
               </CardContent>
@@ -111,7 +116,7 @@ export default function ClientList() {
           ))}
            {filteredClients.length === 0 && (
             <div className="col-span-full text-center py-12 text-muted-foreground">
-                No clients match the current filters.
+                {t('no_clients_match_filters')}
             </div>
           )}
         </div>
