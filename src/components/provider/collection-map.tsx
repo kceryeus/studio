@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { DUMMY_CLIENTS } from '@/lib/data';
 import type { Client, GarbageStatus } from '@/lib/types';
@@ -40,6 +40,7 @@ const mapCenter: L.LatLngExpression = [34.0522, -118.2437];
 export default function CollectionMap() {
     const [clients, setClients] = useState<Client[]>(DUMMY_CLIENTS);
     const { toast } = useToast();
+    const mapRef = useRef<L.Map | null>(null);
 
     const updateGarbageStatus = (clientId: string, status: GarbageStatus) => {
         setClients(prevClients =>
@@ -49,7 +50,7 @@ export default function CollectionMap() {
         );
         toast({
             title: "Status Updated",
-            description: `Client ${clientId} status set to ${status}.`,
+            description: `Client's status set to ${status}.`,
         });
     };
 
@@ -80,10 +81,17 @@ export default function CollectionMap() {
                 </Popup>
             </Marker>
         );
-    }), [clients, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [clients]);
 
     return (
-        <MapContainer center={mapCenter} zoom={13} style={{ height: '70vh', width: '100%' }} className="rounded-lg shadow-lg">
+        <MapContainer 
+            center={mapCenter} 
+            zoom={13} 
+            style={{ height: '70vh', width: '100%' }} 
+            className="rounded-lg shadow-lg"
+            whenCreated={map => { mapRef.current = map; }}
+        >
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
