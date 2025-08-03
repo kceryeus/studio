@@ -1,6 +1,8 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
+import * as React from "react";
 import Map, { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer } from "react-map-gl/maplibre";
 import type { MapRef, LayerProps } from "react-map-gl/maplibre";
 import { DUMMY_CLIENTS } from "@/lib/data";
