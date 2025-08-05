@@ -195,7 +195,7 @@ export default function CollectionMap({
         ))}
 
         {routeGeoJSON && (
-            <Source id="route-source" type="geojson" data={routeGeoJSON}>
+            <Source id="route" type="geojson" data={routeGeoJSON}>
                 <Layer {...routeLayer} />
             </Source>
         )}
