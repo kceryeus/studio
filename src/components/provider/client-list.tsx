@@ -11,9 +11,11 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { User, MapPin, CircleDollarSign, ShieldCheck, ShieldAlert, FileText } from 'lucide-react';
+import { User, MapPin, CircleDollarSign, ShieldCheck, ShieldAlert, FileText, Settings } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import { Label } from '../ui/label';
 
 const StatusBadge = ({ status }: { status: 'active' | 'suspended' }) => {
     const { t } = useLanguage();
@@ -46,7 +48,9 @@ export default function ClientList() {
   const [collectionFilter, setCollectionFilter] = useState<CollectionStatus | 'all'>('all');
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | 'all'>('all');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [editingClient, setEditingClient] = useState<Partial<Client> | null>(null);
   const { t } = useLanguage();
+  const { toast } = useToast();
 
   const filteredClients = useMemo(() => {
     return clients.filter(client => {
@@ -59,13 +63,32 @@ export default function ClientList() {
 
   const clientTransactions = useMemo(() => {
     if (!selectedClient) return [];
-    // A real implementation would fetch this, here we filter global transactions
-    // This is a simplified logic for the prototype
     return DUMMY_TRANSACTIONS.filter(tx => tx.description.includes(selectedClient.id));
   }, [selectedClient]);
 
   const handleRowClick = (client: Client) => {
     setSelectedClient(client);
+    setEditingClient({...client});
+  }
+
+  const handleCloseDialog = () => {
+    setSelectedClient(null);
+    setEditingClient(null);
+  }
+
+  const handleSaveChanges = () => {
+    if (!editingClient || !editingClient.id) return;
+
+    setClients(prevClients => 
+      prevClients.map(c => c.id === editingClient.id ? { ...c, ...editingClient } as Client : c)
+    );
+    
+    toast({
+        title: "Client Updated",
+        description: `Successfully updated ${editingClient.name}'s details.`,
+    });
+
+    handleCloseDialog();
   }
 
   return (
@@ -145,8 +168,8 @@ export default function ClientList() {
         </CardContent>
       </Card>
 
-      <Dialog open={!!selectedClient} onOpenChange={() => setSelectedClient(null)}>
-        <DialogContent className="max-w-2xl">
+      <Dialog open={!!selectedClient} onOpenChange={handleCloseDialog}>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{selectedClient?.name}</DialogTitle>
             <DialogDescription>
@@ -155,7 +178,31 @@ export default function ClientList() {
               </div>
             </DialogDescription>
           </DialogHeader>
-            <div className="py-2 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
+                <div className='space-y-4'>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg flex items-center gap-2"><Settings className="w-5 h-5 text-primary" /> Account Status</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                           <div>
+                                <Label htmlFor="collection-status-select">Collection Status</Label>
+                                <Select 
+                                    value={editingClient?.collectionStatus}
+                                    onValueChange={(value) => setEditingClient(prev => prev ? {...prev, collectionStatus: value as CollectionStatus} : null)}
+                                >
+                                    <SelectTrigger id="collection-status-select">
+                                        <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="active">Active</SelectItem>
+                                        <SelectItem value="suspended">Suspended</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                           </div>
+                        </CardContent>
+                    </Card>
+                </div>
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /> {t('transaction_history')}</CardTitle>
@@ -190,7 +237,8 @@ export default function ClientList() {
                 </Card>
             </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedClient(null)}>{t('close')}</Button>
+            <Button variant="outline" onClick={handleCloseDialog}>{t('cancel')}</Button>
+            <Button onClick={handleSaveChanges}>{t('save_changes')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
