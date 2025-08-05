@@ -1,5 +1,5 @@
 
-import type { Client, Route, DayOfWeek, Vehicle, Worker, TimesheetEntry, Assignment, Transaction } from './types';
+import type { Client, Route, DayOfWeek, Vehicle, Worker, TimesheetEntry, Assignment, Transaction, FuelLogEntry, MaintenanceLogEntry } from './types';
 import { subDays, addDays, format, subMonths, startOfMonth } from 'date-fns';
 
 const today = new Date();
@@ -81,7 +81,7 @@ export const DUMMY_CLIENTS: Client[] = [
     id: 'CLI004',
     name: 'Ana Rodrigues',
     address: 'Av. da Marginal, 1011, Maputo',
-    coordinates: { lat: -25.9325, lng: 32.6109 },
+    coordinates: { lat: -25.9189, lng: 32.6186 },
     collectionStatus: 'suspended',
     paymentStatus: 'overdue',
     garbageStatus: 'missed',
@@ -128,6 +128,19 @@ export const DUMMY_CLIENTS: Client[] = [
   },
 ];
 
+const VEH01_Fuel: FuelLogEntry[] = [
+    { id: 'F01', date: format(subDays(today, 5), 'yyyy-MM-dd'), liters: 100, cost: 9000, odometer: 149500, fuelType: 'Diesel' },
+    { id: 'F02', date: format(subDays(today, 15), 'yyyy-MM-dd'), liters: 120, cost: 10800, odometer: 148300, fuelType: 'Diesel' }
+];
+
+const VEH01_Maint: MaintenanceLogEntry[] = [
+    { id: 'M01', date: format(subDays(today, 60), 'yyyy-MM-dd'), description: 'Oil change and filter replacement', cost: 5000, odometer: 145000 }
+];
+
+const VEH02_Fuel: FuelLogEntry[] = [
+    { id: 'F03', date: format(subDays(today, 2), 'yyyy-MM-dd'), liters: 50, cost: 4250, odometer: 89600, fuelType: 'Gasoline' },
+];
+
 export const DUMMY_VEHICLES: Vehicle[] = [
     {
         id: 'VEH01',
@@ -140,6 +153,8 @@ export const DUMMY_VEHICLES: Vehicle[] = [
         odometer: 150234,
         lastServiceDate: format(subDays(today, 60), 'yyyy-MM-dd'),
         lastDriverId: 'WRK03',
+        fuelLog: VEH01_Fuel,
+        maintenanceLog: VEH01_Maint,
     },
     {
         id: 'VEH02',
@@ -152,6 +167,8 @@ export const DUMMY_VEHICLES: Vehicle[] = [
         odometer: 89765,
         lastServiceDate: format(subDays(today, 30), 'yyyy-MM-dd'),
         lastDriverId: 'WRK01',
+        fuelLog: VEH02_Fuel,
+        maintenanceLog: [],
     },
     {
         id: 'VEH03',
@@ -164,6 +181,10 @@ export const DUMMY_VEHICLES: Vehicle[] = [
         odometer: 210450,
         lastServiceDate: format(subDays(today, 90), 'yyyy-MM-dd'),
         lastDriverId: null,
+        fuelLog: [],
+        maintenanceLog: [
+            { id: 'M02', date: format(subDays(today, 2), 'yyyy-MM-dd'), description: 'Engine diagnostics', cost: 15000, odometer: 210440 }
+        ],
     },
 ];
 

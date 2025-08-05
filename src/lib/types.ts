@@ -37,6 +37,7 @@ export type Client = {
 };
 
 export type VehicleStatus = 'in-use' | 'maintenance' | 'available';
+export type FuelType = 'Diesel' | 'Gasoline';
 
 export type FuelLogEntry = {
     id: string;
@@ -44,6 +45,7 @@ export type FuelLogEntry = {
     liters: number;
     cost: number;
     odometer: number;
+    fuelType: FuelType;
 };
 
 export type MaintenanceLogEntry = {
@@ -57,7 +59,7 @@ export type MaintenanceLogEntry = {
 export type Vehicle = {
     id: string;
     type: string;
-    fuelType: 'Diesel' | 'Gasoline' | 'Electric';
+    fuelType: FuelType;
     capacity: number; // in kg
     licensePlate: string;
     status: VehicleStatus;
