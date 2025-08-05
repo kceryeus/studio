@@ -1,6 +1,6 @@
 
-import type { Client, Route, DayOfWeek, Vehicle, Worker, TimesheetEntry, Assignment } from './types';
-import { subDays, addDays, format } from 'date-fns';
+import type { Client, Route, DayOfWeek, Vehicle, Worker, TimesheetEntry, Assignment, Transaction } from './types';
+import { subDays, addDays, format, subMonths, startOfMonth } from 'date-fns';
 
 const today = new Date();
 
@@ -80,8 +80,8 @@ export const DUMMY_CLIENTS: Client[] = [
   {
     id: 'CLI004',
     name: 'Ana Rodrigues',
-    address: 'Av. da Marginal, 101, Maputo',
-    coordinates: { lat: -25.9818, lng: 32.5940 },
+    address: 'Av. da Marginal, 1011, Maputo',
+    coordinates: { lat: -25.9860, lng: 32.6074 },
     collectionStatus: 'suspended',
     paymentStatus: 'overdue',
     garbageStatus: 'missed',
@@ -229,4 +229,21 @@ export const DUMMY_ASSIGNMENTS: Assignment[] = [
         taskDescription: 'Coleta do Parque Industrial',
         status: 'completed',
     }
+];
+
+export const DUMMY_TRANSACTIONS: Transaction[] = [
+    // Income from clients
+    { id: 'TRN001', date: format(subDays(today, 5), 'yyyy-MM-dd'), amount: 1500, type: 'income', category: 'Client Payment', description: 'Monthly fee for Julio Silva (CLI001)' },
+    { id: 'TRN002', date: format(subDays(today, 12), 'yyyy-MM-dd'), amount: 1500, type: 'income', category: 'Client Payment', description: 'Payment from Mariana Costa (CLI002)' },
+    { id: 'TRN003', date: format(subDays(today, 25), 'yyyy-MM-dd'), amount: 1500, type: 'income', category: 'Client Payment', description: 'Monthly fee for Sofia Lopes (CLI006)' },
+    { id: 'TRN004', date: format(subDays(today, 28), 'yyyy-MM-dd'), amount: 1500, type: 'income', category: 'Client Payment', description: 'Payment from Paulo Santos (CLI005)' },
+    { id: 'TRN005', date: format(subMonths(startOfMonth(today), 1), 'yyyy-MM-dd'), amount: 1500, type: 'income', category: 'Client Payment', description: 'Late payment from Carlos Pereira (CLI003)' },
+
+    // Expenses
+    { id: 'TRN006', date: format(subDays(today, 2), 'yyyy-MM-dd'), amount: 8500, type: 'expense', category: 'Fuel', description: 'Diesel for VEH01 and VEH03' },
+    { id: 'TRN007', date: format(subDays(today, 7), 'yyyy-MM-dd'), amount: 25000, type: 'expense', category: 'Maintenance', description: 'Engine repair for VEH03' },
+    { id: 'TRN008', date: format(startOfMonth(today), 'yyyy-MM-dd'), amount: 120000, type: 'expense', category: 'Salaries', description: 'Monthly payroll - Peter Parker' },
+    { id: 'TRN009', date: format(startOfMonth(today), 'yyyy-MM-dd'), amount: 50000, type: 'expense', category: 'Salaries', description: 'Monthly payroll - Mary Jane' },
+    { id: 'TRN010', date: format(subDays(today, 15), 'yyyy-MM-dd'), amount: 3000, type: 'expense', category: 'Other', description: 'Purchase of new gloves and safety vests' },
+    { id: 'TRN011', date: format(subMonths(startOfMonth(today), 1), 'yyyy-MM-dd'), amount: 15000, type: 'expense', category: 'Fuel', description: 'Monthly fuel expense' },
 ];

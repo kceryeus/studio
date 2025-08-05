@@ -2,108 +2,109 @@
 "use client";
 
 import { useMemo } from 'react';
-import { DUMMY_CLIENTS } from '@/lib/data';
-import type { PaymentStatus } from '@/lib/data';
+import type { Transaction, Client } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, Line, ComposedChart } from 'recharts';
 import { subMonths, format, startOfMonth } from 'date-fns';
 import { useLanguage } from '@/context/language-context';
+import TransactionsView from './transactions-view';
+import { DollarSign, TrendingUp, TrendingDown, FileText } from 'lucide-react';
 
-const PaymentBadge = ({ status }: { status: PaymentStatus }) => {
+export default function PaymentReports({ transactions, clients }: { transactions: Transaction[], clients: Client[] }) {
     const { t } = useLanguage();
-  const variant = {
-    paid: 'secondary',
-    due: 'outline',
-    overdue: 'destructive',
-  }[status] as 'secondary' | 'outline' | 'destructive';
-  return (
-    <Badge variant={variant} className="capitalize">
-      {t(status)}
-    </Badge>
-  );
-};
 
-export default function PaymentReports() {
-    const { t } = useLanguage();
-    
-    const chartData = useMemo(() => {
-        const data = Array.from({ length: 6 }).map((_, i) => {
-            const month = subMonths(new Date(), 5 - i);
-            return {
-                month: format(month, 'MMM'),
-                year: format(month, 'yyyy'),
-                total: 0,
-            };
+    const { totalRevenue, totalCosts, netProfit, chartData } = useMemo(() => {
+        let revenue = 0;
+        let costs = 0;
+
+        const monthlyData: { [key: string]: { revenue: number, costs: number } } = {};
+
+        transactions.forEach(tx => {
+            const month = format(startOfMonth(new Date(tx.date)), 'MMM yyyy');
+            if (!monthlyData[month]) {
+                monthlyData[month] = { revenue: 0, costs: 0 };
+            }
+
+            if (tx.type === 'income') {
+                revenue += tx.amount;
+                monthlyData[month].revenue += tx.amount;
+            } else {
+                costs += tx.amount;
+                monthlyData[month].costs += tx.amount;
+            }
         });
+        
+        const sortedMonths = Object.keys(monthlyData).sort((a,b) => new Date(a).getTime() - new Date(b).getTime());
+        const last6Months = sortedMonths.slice(-6);
 
-        DUMMY_CLIENTS.forEach(client => {
-            client.paymentHistory.forEach(payment => {
-                const paymentMonth = format(startOfMonth(new Date(payment.date)), 'MMM');
-                const paymentYear = format(new Date(payment.date), 'yyyy');
-                const monthEntry = data.find(d => d.month === paymentMonth && d.year === paymentYear);
-                if (monthEntry) {
-                    monthEntry.total += payment.amount;
-                }
-            });
-        });
+        const chartData = last6Months.map(month => ({
+            month: month.split(' ')[0],
+            Revenue: monthlyData[month].revenue,
+            Costs: monthlyData[month].costs,
+        }));
 
-        // Add some random data for better visualization
-        data[2].total += 50; data[3].total += 25; data[4].total += 75;
-
-        return data;
-    }, []);
+        return {
+            totalRevenue: revenue,
+            totalCosts: costs,
+            netProfit: revenue - costs,
+            chartData
+        };
+    }, [transactions]);
 
     const chartConfig = {
-      total: {
-        label: t('total'),
-        color: 'hsl(var(--primary))',
+      Revenue: {
+        label: t('revenue_overview'),
+        color: 'hsl(var(--chart-1))',
+      },
+      Costs: {
+        label: t('total_costs'),
+        color: 'hsl(var(--destructive))',
       },
     };
 
-    const totalBalanceDue = DUMMY_CLIENTS.reduce((acc, client) => acc + client.balance, 0);
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-            <CardHeader>
-                <CardTitle>{t('client_payment_status_title')}</CardTitle>
-                <CardDescription>{t('client_payment_status_subtitle')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>{t('client')}</TableHead>
-                            <TableHead>{t('payment_status')}</TableHead>
-                            <TableHead className="text-right">{t('balance')}</TableHead>
-                            <TableHead>{t('next_due_date')}</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {DUMMY_CLIENTS.map(client => (
-                            <TableRow key={client.id}>
-                                <TableCell className="font-medium">{client.name}</TableCell>
-                                <TableCell><PaymentBadge status={client.paymentStatus} /></TableCell>
-                                <TableCell className="text-right">{client.balance.toFixed(2)} MT</TableCell>
-                                <TableCell>{client.collectionStatus === 'suspended' ? 'N/A' : client.nextPaymentDueDate}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+    return (
         <div className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-3">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">{t('total_revenue')}</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{totalRevenue.toFixed(2)} MT</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">{t('total_costs')}</CardTitle>
+                        <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{totalCosts.toFixed(2)} MT</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">{t('net_profit')}</CardTitle>
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                            {netProfit.toFixed(2)} MT
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
             <Card>
                 <CardHeader>
-                    <CardTitle>{t('revenue_overview')}</CardTitle>
-                    <CardDescription>{t('revenue_overview_subtitle')}</CardDescription>
+                    <CardTitle>{t('financial_overview')}</CardTitle>
+                    <CardDescription>{t('financial_overview_subtitle')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ChartContainer config={chartConfig} className="h-64 w-full">
-                        <BarChart accessibilityLayer data={chartData}>
+                    <ChartContainer config={chartConfig} className="h-72 w-full">
+                        <ComposedChart accessibilityLayer data={chartData}>
                             <CartesianGrid vertical={false} />
                             <XAxis
                                 dataKey="month"
@@ -112,24 +113,26 @@ export default function PaymentReports() {
                                 axisLine={false}
                             />
                             <YAxis
-                                tickFormatter={(value) => `${value} MT`}
+                                tickFormatter={(value) => `${value / 1000}k`}
                             />
                             <ChartTooltip content={<ChartTooltipContent />} />
-                            <Bar dataKey="total" fill="var(--color-total)" radius={4} />
-                        </BarChart>
+                            <Legend />
+                            <Bar dataKey="Revenue" fill="var(--color-Revenue)" radius={4} />
+                            <Line type="monotone" dataKey="Costs" stroke="var(--color-Costs)" strokeWidth={2} dot={false} />
+                        </ComposedChart>
                     </ChartContainer>
                 </CardContent>
             </Card>
-             <Card>
+
+            <Card>
                 <CardHeader>
-                    <CardTitle>{t('total_outstanding_balance')}</CardTitle>
+                     <CardTitle className="flex items-center gap-2"><FileText className="w-5 h-5" /> {t('transaction_history')}</CardTitle>
+                    <CardDescription>{t('transaction_history_subtitle')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-3xl font-bold text-destructive">{totalBalanceDue.toFixed(2)} MT</p>
-                    <p className="text-xs text-muted-foreground">{t('total_outstanding_balance_subtitle')}</p>
+                    <TransactionsView transactions={transactions} clients={clients} />
                 </CardContent>
             </Card>
         </div>
-    </div>
-  );
+    );
 }

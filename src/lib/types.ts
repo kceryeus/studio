@@ -80,3 +80,15 @@ export type Assignment = {
     taskDescription: string;
     status: AssignmentStatus;
 };
+
+export type TransactionType = 'income' | 'expense';
+export type TransactionCategory = 'Client Payment' | 'Fuel' | 'Salaries' | 'Maintenance' | 'Other';
+
+export type Transaction = {
+    id: string;
+    date: string;
+    amount: number;
+    type: TransactionType;
+    category: TransactionCategory;
+    description: string;
+};
