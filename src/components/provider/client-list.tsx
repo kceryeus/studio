@@ -2,14 +2,18 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import { DUMMY_CLIENTS } from '@/lib/data';
-import type { Client, CollectionStatus, PaymentStatus } from '@/lib/types';
+import { DUMMY_CLIENTS, DUMMY_TRANSACTIONS } from '@/lib/data';
+import type { Client, CollectionStatus, PaymentStatus, Transaction } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { User, MapPin, CircleDollarSign, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { User, MapPin, CircleDollarSign, ShieldCheck, ShieldAlert, FileText } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
+import { format } from 'date-fns';
 
 const StatusBadge = ({ status }: { status: 'active' | 'suspended' }) => {
     const { t } = useLanguage();
@@ -41,6 +45,7 @@ export default function ClientList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [collectionFilter, setCollectionFilter] = useState<CollectionStatus | 'all'>('all');
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | 'all'>('all');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const { t } = useLanguage();
 
   const filteredClients = useMemo(() => {
@@ -52,75 +57,143 @@ export default function ClientList() {
     });
   }, [clients, searchTerm, collectionFilter, paymentFilter]);
 
+  const clientTransactions = useMemo(() => {
+    if (!selectedClient) return [];
+    // A real implementation would fetch this, here we filter global transactions
+    // This is a simplified logic for the prototype
+    return DUMMY_TRANSACTIONS.filter(tx => tx.description.includes(selectedClient.id));
+  }, [selectedClient]);
+
+  const handleRowClick = (client: Client) => {
+    setSelectedClient(client);
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('client_management_title')}</CardTitle>
-        <CardDescription>{t('client_management_subtitle')}</CardDescription>
-        <div className="flex flex-col md:flex-row gap-4 pt-4">
-          <Input 
-            placeholder={t('search_by_name_or_address')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
-          <div className="flex gap-4">
-            <Select value={collectionFilter} onValueChange={(value) => setCollectionFilter(value as CollectionStatus | 'all')}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder={t('collection_status')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('all_collection_status')}</SelectItem>
-                <SelectItem value="active">{t('active')}</SelectItem>
-                <SelectItem value="suspended">{t('suspended')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={paymentFilter} onValueChange={(value) => setPaymentFilter(value as PaymentStatus | 'all')}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder={t('payment_status')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('all_payment_status')}</SelectItem>
-                <SelectItem value="paid">{t('paid')}</SelectItem>
-                <SelectItem value="due">{t('due')}</SelectItem>
-                <SelectItem value="overdue">{t('overdue')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredClients.map(client => (
-            <Card key={client.id} className="flex flex-col justify-between hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle className="flex items-center gap-2 text-lg"><User className="w-5 h-5 text-primary" /> {client.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-2 mt-1"><MapPin className="w-4 h-4" />{client.address}</CardDescription>
-                    </div>
-                    <StatusBadge status={client.collectionStatus} />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                 <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground flex items-center gap-2"><CircleDollarSign className="w-4 h-4" /> {t('payment_status')}</span>
-                    <PaymentBadge status={client.paymentStatus} />
-                 </div>
-                 <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{t('balance')}</span>
-                    <span className="font-medium">{client.balance.toFixed(2)} MT</span>
-                 </div>
-              </CardContent>
-            </Card>
-          ))}
-           {filteredClients.length === 0 && (
-            <div className="col-span-full text-center py-12 text-muted-foreground">
-                {t('no_clients_match_filters')}
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('client_management_title')}</CardTitle>
+          <CardDescription>{t('client_management_subtitle')}</CardDescription>
+          <div className="flex flex-col md:flex-row gap-4 pt-4">
+            <Input 
+              placeholder={t('search_by_name_or_address')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+            <div className="flex gap-4">
+              <Select value={collectionFilter} onValueChange={(value) => setCollectionFilter(value as CollectionStatus | 'all')}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder={t('collection_status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all_collection_status')}</SelectItem>
+                  <SelectItem value="active">{t('active')}</SelectItem>
+                  <SelectItem value="suspended">{t('suspended')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={paymentFilter} onValueChange={(value) => setPaymentFilter(value as PaymentStatus | 'all')}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder={t('payment_status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all_payment_status')}</SelectItem>
+                  <SelectItem value="paid">{t('paid')}</SelectItem>
+                  <SelectItem value="due">{t('due')}</SelectItem>
+                  <SelectItem value="overdue">{t('overdue')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        </CardHeader>
+        <CardContent>
+            <div className="border rounded-md">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>{t('client')}</TableHead>
+                            <TableHead className="hidden md:table-cell">{t('address')}</TableHead>
+                            <TableHead>{t('collection_status')}</TableHead>
+                            <TableHead>{t('payment_status')}</TableHead>
+                            <TableHead className="text-right">{t('balance')}</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredClients.map(client => (
+                            <TableRow key={client.id} onClick={() => handleRowClick(client)} className="cursor-pointer">
+                                <TableCell className="font-medium">{client.name}</TableCell>
+                                <TableCell className="hidden md:table-cell text-muted-foreground">{client.address}</TableCell>
+                                <TableCell>
+                                    <StatusBadge status={client.collectionStatus} />
+                                </TableCell>
+                                <TableCell>
+                                    <PaymentBadge status={client.paymentStatus} />
+                                </TableCell>
+                                <TableCell className="text-right font-semibold">{client.balance.toFixed(2)} MT</TableCell>
+                            </TableRow>
+                        ))}
+                         {filteredClients.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                                    {t('no_clients_match_filters')}
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!selectedClient} onOpenChange={() => setSelectedClient(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{selectedClient?.name}</DialogTitle>
+            <DialogDescription>
+              <div className="flex items-center gap-2 text-sm mt-1">
+                <MapPin className="w-4 h-4" /> {selectedClient?.address}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+            <div className="py-2 space-y-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /> {t('transaction_history')}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>{t('date')}</TableHead>
+                                    <TableHead>{t('description')}</TableHead>
+                                    <TableHead className="text-right">{t('amount')}</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {clientTransactions.map(tx => (
+                                    <TableRow key={tx.id}>
+                                        <TableCell>{format(new Date(tx.date), 'dd MMM, yyyy')}</TableCell>
+                                        <TableCell>{tx.description}</TableCell>
+                                        <TableCell className="text-right font-medium text-green-600">{tx.amount.toFixed(2)} MT</TableCell>
+                                    </TableRow>
+                                ))}
+                                {clientTransactions.length === 0 && (
+                                     <TableRow>
+                                        <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                                            {t('no_transactions_found')}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedClient(null)}>{t('close')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

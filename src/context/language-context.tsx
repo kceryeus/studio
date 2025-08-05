@@ -32,8 +32,9 @@ const translations = {
         all_types: 'All Types',
         all_categories: 'All Categories',
         search_by_description: 'Search by description...',
-        no_transactions_found: 'No transactions found for the selected filters.',
+        no_transactions_found: 'No transactions found.',
         page_x_of_y: 'Page {{currentPage}} of {{totalPages}}',
+        address: 'Address',
 
         // Statuses
         active: 'Active',
@@ -144,7 +145,7 @@ const translations = {
         active_collections_today: 'Active Collections Today',
         clients_with_issues: 'Clients with Issues',
         client_management_title: 'Client Management',
-        client_management_subtitle: 'View, filter, and manage your clients.',
+        client_management_subtitle: 'View, filter, and manage your clients in the table below.',
         search_by_name_or_address: 'Search by name or address...',
         collection_status: 'Collection Status',
         all_collection_status: 'All Collection Status',
@@ -152,6 +153,7 @@ const translations = {
         all_payment_status: 'All Payment Status',
         balance: 'Balance',
         no_clients_match_filters: 'No clients match the current filters.',
+        client: 'Client',
         
         // Provider Map
         map_title: 'Interactive Collection Map',
@@ -230,7 +232,6 @@ const translations = {
         payments_reporting_subtitle: 'Track client payments, view balances, and generate financial reports.',
         client_payment_status_title: 'Client Payment Status',
         client_payment_status_subtitle: 'Detailed overview of all client payments and balances.',
-        client: 'Client',
         next_due_date: 'Next Due Date',
         revenue_overview: 'Revenue Overview',
         revenue_overview_subtitle: 'Monthly revenue from paid invoices.',
@@ -299,8 +300,9 @@ const translations = {
         all_types: 'Todos os Tipos',
         all_categories: 'Todas as Categorias',
         search_by_description: 'Pesquisar por descrição...',
-        no_transactions_found: 'Nenhuma transação encontrada para os filtros selecionados.',
+        no_transactions_found: 'Nenhuma transação encontrada.',
         page_x_of_y: 'Página {{currentPage}} de {{totalPages}}',
+        address: 'Endereço',
 
         // Statuses
         active: 'Ativo',
@@ -411,7 +413,7 @@ const translations = {
         active_collections_today: 'Coletas Ativas Hoje',
         clients_with_issues: 'Clientes com Problemas',
         client_management_title: 'Gestão de Clientes',
-        client_management_subtitle: 'Veja, filtre e faça a gestão dos seus clientes.',
+        client_management_subtitle: 'Veja, filtre e faça a gestão dos seus clientes na tabela abaixo.',
         search_by_name_or_address: 'Pesquisar por nome ou endereço...',
         collection_status: 'Estado da Coleta',
         all_collection_status: 'Todos os Estados de Coleta',
@@ -419,6 +421,7 @@ const translations = {
         all_payment_status: 'Todos os Estados de Pagamento',
         balance: 'Saldo',
         no_clients_match_filters: 'Nenhum cliente corresponde aos filtros atuais.',
+        client: 'Cliente',
 
         // Provider Map
         map_title: 'Mapa Interativo de Coleta',
@@ -497,7 +500,6 @@ const translations = {
         payments_reporting_subtitle: 'Acompanhe os pagamentos dos clientes, veja os saldos e gere relatórios financeiros.',
         client_payment_status_title: 'Estado de Pagamento do Cliente',
         client_payment_status_subtitle: 'Visão detalhada de todos os pagamentos e saldos dos clientes.',
-        client: 'Cliente',
         next_due_date: 'Próxima Data de Vencimento',
         revenue_overview: 'Visão Geral das Receitas',
         revenue_overview_subtitle: 'Receitas mensais de faturas pagas.',
