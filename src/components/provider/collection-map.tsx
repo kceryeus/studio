@@ -225,7 +225,7 @@ export default function CollectionMap({
 
         {newRouteGeoJSON && (
             <Source id="new-route-source" type="geojson" data={newRouteGeoJSON}>
-                <Layer {...newRouteLayer} />
+                <Layer {...{...routeLayer, id: 'new-route-line', paint: {...routeLayer.paint, 'line-color': '#D4AF37'}}} />
             </Source>
         )}
 
