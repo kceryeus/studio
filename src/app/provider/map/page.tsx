@@ -106,7 +106,7 @@ export default function ProviderMapPage() {
         };
         
         setRoutes(prev => [...prev, newRoute]);
-        setSelectedRoute(newRoute); // Instantly display the new route
+        setSelectedRoute(newRoute);
         
         toast({
             title: "Route Created",
