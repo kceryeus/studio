@@ -2,11 +2,11 @@
 "use client";
 
 import * as React from "react";
-import Map, { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer } from "react-map-gl/maplibre";
-import type { MapRef, LayerProps, MapLayerMouseEvent } from "react-map-gl/maplibre";
+import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, useMap } from "react-map-gl/maplibre";
+import type { MapRef } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import type { Client, GarbageStatus, Route } from "@/lib/types";
+import type { Client, GarbageStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,8 +16,6 @@ import {
   Hourglass,
   BellOff,
   MapPin,
-  UserCircle,
-  MoveUpRight,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/language-context";
@@ -29,6 +27,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+
+// TypeScript declaration to expect MaplibreDirections on the window object
+declare global {
+  interface Window {
+    MaplibreDirections: any;
+  }
+}
 
 const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/streets-v2/style.json?key=xQ1eFBidgVoYA8BIrNEu`;
 
@@ -58,37 +63,47 @@ const GarbageStatusIcon = ({
   }
 };
 
-const routeLayer: LayerProps = {
-  id: 'route-line',
-  type: 'line',
-  source: 'route',
-  layout: {
-    'line-join': 'round',
-    'line-cap': 'round',
-  },
-  paint: {
-    'line-color': '#468499',
-    'line-width': 4,
-    'line-opacity': 0.8
-  },
-};
+
+const DirectionsControl = () => {
+    const { current: map } = useMap();
+    const [directions, setDirections] = React.useState<any>(null);
+
+    React.useEffect(() => {
+        if (!map || directions || !window.MaplibreDirections) return;
+
+        const newDirections = new window.MaplibreDirections(map.getMap(), {
+            api: 'https://routing.openstreetmap.de/routed-car/route/v1',
+            profile: 'driving',
+            makePostRequest: true,
+            controls: {
+                instructions: true,
+                waypoints: true,
+            },
+            interactive: true,
+        });
+
+        newDirections.setWaypoints([
+            [-25.9613, 32.5895], // Example starting waypoint (Julio Silva)
+            [-25.9754, 32.5768], // Example ending waypoint (Carlos Pereira)
+        ]);
+
+        map.addControl(newDirections, 'top-left');
+        setDirections(newDirections);
+
+        return () => {
+             if (map && newDirections) {
+                map.removeControl(newDirections);
+            }
+        }
+    }, [map, directions]);
+
+  return null;
+}
 
 export default function CollectionMap({ 
     clients, 
-    route, 
-    userLocation,
-    isDrawing,
-    newRoutePoints,
-    onMapClick,
-    onMarkerClick,
 }: { 
     clients: Client[], 
-    route: Route | null, 
-    userLocation: [number, number] | null,
-    isDrawing: boolean;
-    newRoutePoints: { lat: number; lng: number }[];
-    onMapClick: (coords: { lat: number; lng: number }) => void;
-    onMarkerClick: (index: number) => void;
 }) {
   const [clientData, setClientData] = React.useState<Client[]>(clients);
   const [dialogClient, setDialogClient] = React.useState<Client | null>(null);
@@ -97,31 +112,7 @@ export default function CollectionMap({
 
   const { toast } = useToast();
   const { t } = useLanguage();
-
-  const routeGeoJSON = React.useMemo(() => {
-    if (!route || !route.path || route.path.length < 2) return null;
-    return {
-        type: 'Feature' as const,
-        properties: {},
-        geometry: {
-            type: 'LineString' as const,
-            coordinates: route.path.map(p => [p.lng, p.lat])
-        }
-    }
-  }, [route]);
-
-  React.useEffect(() => {
-    if (userLocation && mapRef.current) {
-      mapRef.current.flyTo({ center: [userLocation[1], userLocation[0]], zoom: 14 });
-    }
-  }, [userLocation]);
-
-  const handleInternalMapClick = (event: MapLayerMouseEvent) => {
-    if (isDrawing) {
-      onMapClick(event.lngLat);
-    }
-  };
-
+  
   const updateGarbageStatus = (clientId: string, status: GarbageStatus) => {
     setClientData((prevClients) =>
       prevClients.map((client) =>
@@ -148,11 +139,10 @@ export default function CollectionMap({
         style={{width: '100%', height: '100%'}}
         maxBounds={mozambiqueBounds}
         mapLib={import('maplibre-gl')}
-        onClick={handleInternalMapClick}
-        cursor={isDrawing ? 'crosshair' : 'grab'}
       >
         <FullscreenControl position="top-right" />
         <NavigationControl position="top-right" />
+        <DirectionsControl />
 
         {clientData.map((client) => (
           <Marker
@@ -160,46 +150,14 @@ export default function CollectionMap({
             longitude={client.coordinates.lng}
             latitude={client.coordinates.lat}
             onClick={(e) => {
-              if (!isDrawing) {
                 e.originalEvent.stopPropagation();
                 setPopupInfo(client);
-              }
             }}
             anchor="bottom"
           >
              <MapPin className="text-primary w-8 h-8 cursor-pointer drop-shadow-lg" />
           </Marker>
         ))}
-
-        {userLocation && (
-            <Marker longitude={userLocation[1]} latitude={userLocation[0]}>
-                <UserCircle className="w-8 h-8 text-blue-500 animate-pulse drop-shadow-lg" />
-            </Marker>
-        )}
-
-        {/* Markers for new route being drawn */}
-        {isDrawing && newRoutePoints.map((point, index) => (
-            <Marker
-                key={`new-point-${index}`}
-                longitude={point.lng}
-                latitude={point.lat}
-                onClick={(e) => {
-                    e.originalEvent.stopPropagation();
-                    onMarkerClick(index);
-                }}
-            >
-                <div className="bg-accent rounded-full p-1 shadow-lg border-2 border-white">
-                    <MoveUpRight className="w-4 h-4 text-accent-foreground" />
-                </div>
-            </Marker>
-        ))}
-
-        {routeGeoJSON && (
-            <Source id="route" type="geojson" data={routeGeoJSON}>
-                <Layer {...routeLayer} />
-            </Source>
-        )}
-
 
         {popupInfo && (
           <Popup
