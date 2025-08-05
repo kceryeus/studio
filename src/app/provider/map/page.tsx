@@ -91,6 +91,8 @@ export default function ProviderMapPage() {
         });
 
         if (!response.ok) {
+            const errorDetails = await response.json();
+            console.error("API Error:", errorDetails);
             throw new Error('Failed to generate route from API.');
         }
 
@@ -104,6 +106,7 @@ export default function ProviderMapPage() {
         };
         
         setRoutes(prev => [...prev, newRoute]);
+        setSelectedRoute(newRoute); // Instantly display the new route
         
         toast({
             title: "Route Created",
@@ -122,7 +125,7 @@ export default function ProviderMapPage() {
         toast({
             variant: "destructive",
             title: "Error",
-            description: "Could not create the route. Please try again.",
+            description: "Could not create the route. The points may be too far apart or unreachable.",
         });
     } finally {
         setIsSaving(false);
@@ -131,7 +134,6 @@ export default function ProviderMapPage() {
 
 
   const allVisibleClients = DUMMY_CLIENTS.filter(c => c.sharesLocation);
-  const clientsOnSelectedRoute = selectedRoute ? allVisibleClients.filter(c => c.routeId === selectedRoute.id) : [];
 
   const weekdays: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 

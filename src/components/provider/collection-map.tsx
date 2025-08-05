@@ -73,16 +73,6 @@ const routeLayer: LayerProps = {
   },
 };
 
-const newRouteLayer: LayerProps = {
-    ...routeLayer,
-    id: 'new-route-line',
-    paint: {
-        'line-color': '#D4AF37', // Accent color
-        'line-width': 5,
-        'line-dasharray': [2, 2],
-    }
-}
-
 export default function CollectionMap({ 
     clients, 
     route, 
@@ -119,19 +109,6 @@ export default function CollectionMap({
         }
     }
   }, [route]);
-
-  const newRouteGeoJSON = React.useMemo(() => {
-    if (!isDrawing || newRoutePoints.length < 2) return null;
-    return {
-        type: 'Feature' as const,
-        properties: {},
-        geometry: {
-            type: 'LineString' as const,
-            coordinates: newRoutePoints.map(p => [p.lng, p.lat])
-        }
-    }
-  }, [isDrawing, newRoutePoints]);
-
 
   React.useEffect(() => {
     if (userLocation && mapRef.current) {
@@ -223,11 +200,6 @@ export default function CollectionMap({
             </Source>
         )}
 
-        {newRouteGeoJSON && (
-            <Source id="new-route-source" type="geojson" data={newRouteGeoJSON}>
-                <Layer {...{...routeLayer, id: 'new-route-line', paint: {...routeLayer.paint, 'line-color': '#D4AF37'}}} />
-            </Source>
-        )}
 
         {popupInfo && (
           <Popup
