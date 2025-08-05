@@ -119,7 +119,7 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
                         <CardContent className="space-y-4 text-sm flex-grow">
                              <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground flex items-center gap-2"><Gauge className="w-4 h-4" /> Odometer</span>
-                                <span className="font-medium">{vehicle.odometer.toLocaleString()} km</span>
+                                <span className="font-medium">{vehicle.odometer.toLocaleString('en-US')} km</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground flex items-center gap-2"><User className="w-4 h-4" /> Last Driver</span>
