@@ -224,11 +224,9 @@ export default function ClientList() {
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{selectedClient?.name}</DialogTitle>
-            <DialogDescription>
-              <div className="flex items-center gap-2 text-sm mt-1">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
                 <MapPin className="w-4 h-4" /> {selectedClient?.address}
-              </div>
-            </DialogDescription>
+            </div>
           </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
                 <div className='space-y-4'>
@@ -357,4 +355,3 @@ export default function ClientList() {
     </>
   );
 }
-
