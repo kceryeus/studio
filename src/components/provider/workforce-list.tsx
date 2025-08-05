@@ -3,15 +3,12 @@
 
 import { useState, useMemo } from 'react';
 import type { Worker, Vehicle, TimesheetEntry } from '@/lib/types';
-import { DUMMY_VEHICLES } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Briefcase, DollarSign, Clock, CheckCircle, XCircle, Calendar, Truck, Pencil } from 'lucide-react';
+import { User, Briefcase, DollarSign, Clock, CheckCircle, XCircle, Calendar, Truck } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLanguage } from '@/context/language-context';
 
@@ -26,20 +23,10 @@ const WorkerStatusBadge = ({ status }: { status: 'working' | 'on-leave' }) => {
 };
 
 export default function WorkforceList({ workers: initialWorkers }: { workers: Worker[] }) {
-    const [workers, setWorkers] = useState<Worker[]>(initialWorkers);
-    const [vehicles, setVehicles] = useState<Vehicle[]>(DUMMY_VEHICLES);
+    const [workers] = useState<Worker[]>(initialWorkers);
     const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
     const [isTimesheetModalOpen, setIsTimesheetModalOpen] = useState(false);
-    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-    const [assignedVehicleId, setAssignedVehicleId] = useState<string | null>(null);
     const { t } = useLanguage();
-
-    const handleAssignVehicle = () => {
-        if (selectedWorker) {
-            setWorkers(workers.map(w => w.id === selectedWorker.id ? { ...w, assignedVehicleId } : w));
-            setIsAssignModalOpen(false);
-        }
-    };
 
     const totalHours = useMemo(() => {
         if (!selectedWorker || !selectedWorker.timesheet) return 0;
@@ -54,10 +41,10 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
                         <CardHeader>
                             <div className="flex justify-between items-start">
                                 <div className="flex items-center gap-4">
-                                    <Avatar className="w-16 h-16" data-ai-hint="person">
+                                    <Avatar className="w-16 h-16" data-ai-hint="person face">
                                         <AvatarImage src={worker.imageUrl} alt={worker.name} />
                                         <AvatarFallback>
-                                            <User className="w-8 h-8 text-muted-foreground" />
+                                            {worker.name.split(' ').map(n => n[0]).join('')}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
@@ -90,10 +77,6 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
                             <Button variant="outline" size="sm" onClick={() => { setSelectedWorker(worker); setIsTimesheetModalOpen(true); }}>
                                 <Calendar className="mr-2 h-4 w-4" />
                                 {t('view_timesheet')}
-                            </Button>
-                            <Button size="sm" onClick={() => { setSelectedWorker(worker); setAssignedVehicleId(worker.assignedVehicleId); setIsAssignModalOpen(true);}}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                {t('assign_task')}
                             </Button>
                         </CardFooter>
                     </Card>
@@ -130,7 +113,7 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
                                 ))}
                                 {!selectedWorker?.timesheet?.length && (
                                      <TableRow>
-                                        <TableCell colSpan={4} className="text-center text-muted-foreground">{t('no_timesheet_entries')}</TableCell>
+                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">{t('no_timesheet_entries')}</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -141,38 +124,6 @@ export default function WorkforceList({ workers: initialWorkers }: { workers: Wo
                         <DialogClose asChild>
                             <Button variant="outline">{t('close')}</Button>
                         </DialogClose>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Assign Task Modal */}
-            <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('assign_task_to')} {selectedWorker?.name}</DialogTitle>
-                        <DialogDescription>
-                            {t('assign_task_desc')}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <Label htmlFor="vehicle-select">{t('assign_vehicle')}</Label>
-                        <Select value={assignedVehicleId || ''} onValueChange={(value) => setAssignedVehicleId(value)}>
-                            <SelectTrigger id="vehicle-select">
-                                <SelectValue placeholder={t('select_a_vehicle')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="null">{t('none')}</SelectItem>
-                                {vehicles.filter(v => v.status === 'available' || v.id === selectedWorker?.assignedVehicleId).map(vehicle => (
-                                    <SelectItem key={vehicle.id} value={vehicle.id}>{vehicle.licensePlate} ({vehicle.type})</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <DialogFooter>
-                        <DialogClose asChild>
-                            <Button variant="outline">{t('cancel')}</Button>
-                        </DialogClose>
-                        <Button onClick={handleAssignVehicle}>{t('save_assignment')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

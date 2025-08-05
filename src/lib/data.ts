@@ -78,7 +78,7 @@ export const DUMMY_CLIENTS: Client[] = [
     id: 'CLI004',
     name: 'Ana Rodrigues',
     address: 'Av. da Marginal, 1011, Maputo',
-    coordinates: { lat: -25.9284, lng: 32.6186 },
+    coordinates: { lat: -25.9844, lng: 32.5931 },
     collectionStatus: 'suspended',
     paymentStatus: 'overdue',
     garbageStatus: 'missed',
@@ -214,7 +214,7 @@ export const DUMMY_WORKERS: Worker[] = [
         status: 'working',
         assignedVehicleId: 'VEH02',
         lastCheckIn: '08:15 AM',
-        imageUrl: '',
+        imageUrl: 'https://placehold.co/100x100.png',
         timesheet: [],
     },
     {
@@ -226,7 +226,7 @@ export const DUMMY_WORKERS: Worker[] = [
         status: 'on-leave',
         assignedVehicleId: null,
         lastCheckIn: null,
-        imageUrl: '',
+        imageUrl: 'https://placehold.co/100x100.png',
         timesheet: [],
     }
 ];
