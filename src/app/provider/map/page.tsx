@@ -2,7 +2,7 @@
 "use client";
 import CollectionMap from "@/components/provider/collection-map";
 import RouteManager from "@/components/provider/route-manager";
-import { DUMMY_ROUTES } from "@/lib/data";
+import { DUMMY_ROUTES, DUMMY_CLIENTS } from "@/lib/data";
 import { useState } from "react";
 import type { Route, Client, DayOfWeek } from "@/lib/types";
 import { Button } from "@/components/ui/button";
