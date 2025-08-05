@@ -2,11 +2,11 @@
 "use client";
 
 import * as React from "react";
-import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, useMap } from "react-map-gl/maplibre";
+import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, Source, Layer, MapLayerMouseEvent } from "react-map-gl/maplibre";
 import type { MapRef } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import type { Client, GarbageStatus } from "@/lib/types";
+import type { Client, GarbageStatus, Route } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -64,46 +64,65 @@ const GarbageStatusIcon = ({
 };
 
 
-const DirectionsControl = () => {
-    const { current: map } = useMap();
-    const [directions, setDirections] = React.useState<any>(null);
+const DirectionsControl = ({ onRouteChanged, route }: { onRouteChanged: (e: any) => void, route: Route | null }) => {
+    const map = useControl<any>(
+        () => {
+            if (!window.MaplibreDirections) return null;
+            const directions = new window.MaplibreDirections({
+                 api: 'https://routing.openstreetmap.de/routed-car/route/v1',
+                 profile: 'driving',
+                 makePostRequest: true,
+                 controls: {
+                     instructions: true,
+                     waypoints: true,
+                     profileSwitcher: false,
+                 },
+                 interactive: true,
+            });
 
-    React.useEffect(() => {
-        if (!map || directions || !window.MaplibreDirections) return;
-
-        const newDirections = new window.MaplibreDirections(map.getMap(), {
-            api: 'https://routing.openstreetmap.de/routed-car/route/v1',
-            profile: 'driving',
-            makePostRequest: true,
-            controls: {
-                instructions: true,
-                waypoints: true,
-            },
-            interactive: true,
-        });
-
-        newDirections.setWaypoints([
-            [-25.9613, 32.5895], // Example starting waypoint (Julio Silva)
-            [-25.9754, 32.5768], // Example ending waypoint (Carlos Pereira)
-        ]);
-
-        map.addControl(newDirections, 'top-left');
-        setDirections(newDirections);
-
-        return () => {
-             if (map && newDirections) {
-                map.removeControl(newDirections);
+            directions.on('route', onRouteChanged);
+            return directions;
+        },
+        (mapInstance) => { // onAdd
+             if (route && route.path && route.path.length >= 2) {
+                const waypoints = route.path.map(p => [p.lng, p.lat]);
+                mapInstance.setWaypoints(waypoints);
+            } else {
+                 mapInstance.setWaypoints([
+                    [-25.9613, 32.5895],
+                    [-25.9754, 32.5768],
+                ]);
             }
+        },
+        (mapInstance) => { // onRemove
+            mapInstance.off('route', onRouteChanged);
+        },
+        { position: 'top-left' }
+    );
+    
+     React.useEffect(() => {
+        if (!map) return;
+        if (route && route.path && route.path.length >= 2) {
+            const waypoints = route.path.map(p => [p.lng, p.lat]);
+            map.setWaypoints(waypoints);
+        } else if (!route) {
+            // Clear waypoints if no route is selected
+             map.setWaypoints([]);
         }
-    }, [map, directions]);
+    }, [route, map]);
+
 
   return null;
 }
 
 export default function CollectionMap({ 
-    clients, 
+    clients,
+    route,
+    onRouteChanged
 }: { 
-    clients: Client[], 
+    clients: Client[],
+    route: Route | null,
+    onRouteChanged: (e: any) => void
 }) {
   const [clientData, setClientData] = React.useState<Client[]>(clients);
   const [dialogClient, setDialogClient] = React.useState<Client | null>(null);
@@ -142,14 +161,14 @@ export default function CollectionMap({
       >
         <FullscreenControl position="top-right" />
         <NavigationControl position="top-right" />
-        <DirectionsControl />
+        <DirectionsControl onRouteChanged={onRouteChanged} route={route} />
 
         {clientData.map((client) => (
           <Marker
             key={client.id}
             longitude={client.coordinates.lng}
             latitude={client.coordinates.lat}
-            onClick={(e) => {
+            onClick={(e: MapLayerMouseEvent) => {
                 e.originalEvent.stopPropagation();
                 setPopupInfo(client);
             }}

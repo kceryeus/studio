@@ -18,6 +18,7 @@ export type Route = {
     name: string;
     weekdays: DayOfWeek[];
     path?: { lat: number, lng: number }[];
+    geometry?: any; // To store the full GeoJSON geometry from the directions API
 };
 
 export type Client = {
