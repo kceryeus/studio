@@ -1,4 +1,5 @@
 
+
 export type CollectionStatus = 'active' | 'suspended';
 export type PaymentStatus = 'paid' | 'due' | 'overdue';
 export type GarbageStatus = 'collected' | 'pending' | 'missed' | 'out' | 'not-out';
@@ -37,6 +38,22 @@ export type Client = {
 
 export type VehicleStatus = 'in-use' | 'maintenance' | 'available';
 
+export type FuelLogEntry = {
+    id: string;
+    date: string;
+    liters: number;
+    cost: number;
+    odometer: number;
+};
+
+export type MaintenanceLogEntry = {
+    id: string;
+    date: string;
+    description: string;
+    cost: number;
+    odometer: number;
+};
+
 export type Vehicle = {
     id: string;
     type: string;
@@ -45,6 +62,11 @@ export type Vehicle = {
     licensePlate: string;
     status: VehicleStatus;
     nextMaintenance: string;
+    odometer: number;
+    lastServiceDate: string;
+    lastDriverId: string | null;
+    fuelLog?: FuelLogEntry[];
+    maintenanceLog?: MaintenanceLogEntry[];
 };
 
 export type WorkerStatus = 'working' | 'on-leave';

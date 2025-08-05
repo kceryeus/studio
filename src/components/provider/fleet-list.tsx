@@ -1,15 +1,19 @@
 
+
 "use client";
 
 import { useState } from 'react';
-import type { Vehicle, VehicleStatus } from '@/lib/types';
+import type { Vehicle, VehicleStatus, Worker } from '@/lib/types';
+import { DUMMY_WORKERS } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Truck, Fuel, Wrench, Calendar, Dot, Info, Edit } from 'lucide-react';
+import { Truck, Fuel, Wrench, Calendar, Dot, Info, Edit, User, Gauge, Droplets, Hammer } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/context/language-context';
 
 const VehicleStatusBadge = ({ status }: { status: 'in-use' | 'maintenance' | 'available' }) => {
@@ -27,7 +31,7 @@ const VehicleStatusBadge = ({ status }: { status: 'in-use' | 'maintenance' | 'av
     }[status];
 
     return (
-        <Badge variant="outline" className="flex items-center gap-2">
+        <Badge variant="secondary" className="flex items-center gap-2 border-transparent">
             <Dot className={`w-4 h-4 -ml-1 ${color}`} />
             {text}
         </Badge>
@@ -38,28 +42,73 @@ const VehicleStatusBadge = ({ status }: { status: 'in-use' | 'maintenance' | 'av
 export default function FleetList({ vehicles: initialVehicles }: { vehicles: Vehicle[] }) {
     const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
     const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
     const [currentStatus, setCurrentStatus] = useState<VehicleStatus>('available');
+
+    const [isVitalsModalOpen, setIsVitalsModalOpen] = useState(false);
+    const [vitalsData, setVitalsData] = useState({
+        odometer: '',
+        fuelLiters: '',
+        fuelCost: '',
+        maintenanceDesc: '',
+        maintenanceCost: ''
+    });
+
+    const { toast } = useToast();
     const { t } = useLanguage();
+
+    const getDriverName = (driverId: string | null) => {
+        if (!driverId) return 'N/A';
+        return DUMMY_WORKERS.find(w => w.id === driverId)?.name || 'Unknown';
+    };
 
     const handleUpdateStatus = () => {
         if (selectedVehicle) {
             setVehicles(vehicles.map(v => v.id === selectedVehicle.id ? { ...v, status: currentStatus } : v));
             setIsStatusModalOpen(false);
+            toast({ title: "Status Updated", description: `Vehicle ${selectedVehicle.licensePlate} status set to ${currentStatus}.` });
         }
+    };
+
+    const handleUpdateVitals = () => {
+        if (!selectedVehicle) return;
+
+        const updatedVehicle = { ...selectedVehicle };
+        if (vitalsData.odometer) {
+            updatedVehicle.odometer = parseInt(vitalsData.odometer, 10);
+        }
+        // Here you would typically also update fuel and maintenance logs
+        
+        setVehicles(vehicles.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
+        
+        toast({ title: "Vitals Updated", description: `Vitals for ${selectedVehicle.licensePlate} have been updated.` });
+        setIsVitalsModalOpen(false);
+        setVitalsData({ odometer: '', fuelLiters: '', fuelCost: '', maintenanceDesc: '', maintenanceCost: '' });
+    };
+
+    const openVitalsModal = (vehicle: Vehicle) => {
+        setSelectedVehicle(vehicle);
+        setVitalsData({
+            odometer: vehicle.odometer.toString(),
+            fuelLiters: '',
+            fuelCost: '',
+            maintenanceDesc: '',
+            maintenanceCost: ''
+        });
+        setIsVitalsModalOpen(true);
     };
     
     return (
         <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {vehicles.map(vehicle => (
-                    <Card key={vehicle.id} className="flex flex-col justify-between">
+                    <Card key={vehicle.id} className="flex flex-col">
                         <CardHeader>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Truck className="w-6 h-6 text-primary" />
+                                    <CardTitle className="flex items-center gap-2 text-primary">
+                                        <Truck className="w-6 h-6" />
                                         {vehicle.licensePlate}
                                     </CardTitle>
                                     <CardDescription>{vehicle.type}</CardDescription>
@@ -67,53 +116,37 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
                                 <VehicleStatusBadge status={vehicle.status} />
                             </div>
                         </CardHeader>
-                        <CardContent className="space-y-3">
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground flex items-center gap-2"><Fuel className="w-4 h-4" /> {t('fuel_type')}</span>
-                                <span className="font-medium">{vehicle.fuelType}</span>
+                        <CardContent className="space-y-4 text-sm flex-grow">
+                             <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground flex items-center gap-2"><Gauge className="w-4 h-4" /> Odometer</span>
+                                <span className="font-medium">{vehicle.odometer.toLocaleString()} km</span>
                             </div>
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground flex items-center gap-2"><Wrench className="w-4 h-4" /> {t('capacity')}</span>
-                                <span className="font-medium">{vehicle.capacity} kg</span>
+                            <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground flex items-center gap-2"><User className="w-4 h-4" /> Last Driver</span>
+                                <span className="font-medium">{getDriverName(vehicle.lastDriverId)}</span>
                             </div>
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-4 h-4" /> {t('next_maintenance')}</span>
+                             <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground flex items-center gap-2"><Wrench className="w-4 h-4" /> Last Service</span>
+                                <span className="font-medium">{vehicle.lastServiceDate}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-4 h-4" /> Next Maintenance</span>
                                 <span className="font-medium">{vehicle.nextMaintenance}</span>
                             </div>
                         </CardContent>
-                        <CardFooter className="flex justify-end gap-2">
-                            <Button variant="outline" size="sm" onClick={() => { setSelectedVehicle(vehicle); setIsDetailsModalOpen(true); }}>
-                                <Info className="mr-2 h-4 w-4" />
-                                {t('view_details')}
-                            </Button>
-                            <Button size="sm" onClick={() => { setSelectedVehicle(vehicle); setCurrentStatus(vehicle.status); setIsStatusModalOpen(true); }}>
+                        <CardFooter className="grid grid-cols-2 gap-2">
+                             <Button variant="outline" size="sm" onClick={() => { setSelectedVehicle(vehicle); setCurrentStatus(vehicle.status); setIsStatusModalOpen(true); }}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 {t('update_status')}
+                            </Button>
+                            <Button size="sm" onClick={() => openVitalsModal(vehicle)}>
+                                <Info className="mr-2 h-4 w-4" />
+                                Update Vitals
                             </Button>
                         </CardFooter>
                     </Card>
                 ))}
             </div>
-
-            {/* View Details Modal */}
-            <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('vehicle_details_title')}: {selectedVehicle?.licensePlate}</DialogTitle>
-                        <DialogDescription>
-                            {t('vehicle_details_desc')} {selectedVehicle?.type}.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="flex justify-between"><strong>{t('license_plate')}:</strong> <span>{selectedVehicle?.licensePlate}</span></div>
-                        <div className="flex justify-between"><strong>{t('type')}:</strong> <span>{selectedVehicle?.type}</span></div>
-                        <div className="flex justify-between"><strong>{t('fuel_type')}:</strong> <span>{selectedVehicle?.fuelType}</span></div>
-                        <div className="flex justify-between"><strong>{t('capacity')}:</strong> <span>{selectedVehicle?.capacity} kg</span></div>
-                        <div className="flex justify-between"><strong>{t('next_maintenance')}:</strong> <span>{selectedVehicle?.nextMaintenance}</span></div>
-                        <div className="flex justify-between items-center"><strong>{t('status')}:</strong> <VehicleStatusBadge status={selectedVehicle?.status || 'available'} /></div>
-                    </div>
-                </DialogContent>
-            </Dialog>
 
             {/* Update Status Modal */}
             <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
@@ -142,6 +175,54 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
                             <Button variant="outline">{t('cancel')}</Button>
                         </DialogClose>
                         <Button onClick={handleUpdateStatus}>{t('save_changes')}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Update Vitals Modal */}
+            <Dialog open={isVitalsModalOpen} onOpenChange={setIsVitalsModalOpen}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Update Vitals for {selectedVehicle?.licensePlate}</DialogTitle>
+                        <DialogDescription>
+                            Log new odometer readings, fuel consumption, and maintenance records.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-6 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="odometer" className="flex items-center gap-2"><Gauge className="w-4 h-4" /> Current Odometer (km)</Label>
+                            <Input id="odometer" type="number" value={vitalsData.odometer} onChange={e => setVitalsData({...vitalsData, odometer: e.target.value})} />
+                        </div>
+                        <div className="p-4 border rounded-lg">
+                            <h4 className="font-semibold mb-2 flex items-center gap-2"><Droplets className="w-5 h-5 text-primary" /> Log Fueling</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="fuelLiters">Fuel Added (Liters)</Label>
+                                    <Input id="fuelLiters" type="number" value={vitalsData.fuelLiters} onChange={e => setVitalsData({...vitalsData, fuelLiters: e.target.value})}/>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="fuelCost">Total Cost (MT)</Label>
+                                    <Input id="fuelCost" type="number" value={vitalsData.fuelCost} onChange={e => setVitalsData({...vitalsData, fuelCost: e.target.value})}/>
+                                </div>
+                            </div>
+                        </div>
+                         <div className="p-4 border rounded-lg">
+                            <h4 className="font-semibold mb-2 flex items-center gap-2"><Hammer className="w-5 h-5 text-primary" /> Log Maintenance</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                 <div className="space-y-2 col-span-2">
+                                    <Label htmlFor="maintenanceDesc">Description</Label>
+                                    <Input id="maintenanceDesc" value={vitalsData.maintenanceDesc} onChange={e => setVitalsData({...vitalsData, maintenanceDesc: e.target.value})}/>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="maintenanceCost">Total Cost (MT)</Label>
+                                    <Input id="maintenanceCost" type="number" value={vitalsData.maintenanceCost} onChange={e => setVitalsData({...vitalsData, maintenanceCost: e.target.value})}/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsVitalsModalOpen(false)}>Cancel</Button>
+                        <Button onClick={handleUpdateVitals}>Save Vitals</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
