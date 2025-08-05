@@ -2,11 +2,11 @@
 "use client";
 import CollectionMap from "@/components/provider/collection-map";
 import RouteManager from "@/components/provider/route-manager";
-import { DUMMY_ROUTES, DUMMY_CLIENTS } from "@/lib/data";
+import { DUMMY_ROUTES } from "@/lib/data";
 import { useState } from "react";
 import type { Route, Client, DayOfWeek } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { LocateFixed, Save, Ban, MousePointerClick } from "lucide-react";
+import { LocateFixed, Save, Ban, MousePointerClick, Loader2 } from "lucide-react";
 import { useLanguage } from "@/context/language-context";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ export default function ProviderMapPage() {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [newRouteName, setNewRouteName] = useState('');
   const [newRouteDays, setNewRouteDays] = useState<DayOfWeek[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
 
   const handleLocateUser = () => {
@@ -78,25 +79,53 @@ export default function ProviderMapPage() {
     setNewRoutePoints([]);
   }
 
-  const handleSaveRoute = () => {
-    if (newRouteName && newRouteDays.length > 0) {
+  const handleSaveRoute = async () => {
+    if (!newRouteName || newRouteDays.length === 0 || newRoutePoints.length < 2) return;
+    
+    setIsSaving(true);
+    try {
+        const response = await fetch('/api/directions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ points: newRoutePoints }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to generate route from API.');
+        }
+
+        const { path } = await response.json();
+
         const newRoute: Route = {
             id: `ROUTE${Date.now()}`,
             name: newRouteName,
             weekdays: newRouteDays,
-            path: newRoutePoints,
+            path: path,
         };
+        
         setRoutes(prev => [...prev, newRoute]);
+        
         toast({
             title: "Route Created",
             description: `Successfully created route "${newRoute.name}".`,
         });
+
         // Reset states
         setIsDrawing(false);
         setNewRoutePoints([]);
         setIsSaveModalOpen(false);
         setNewRouteName('');
         setNewRouteDays([]);
+
+    } catch (error) {
+        console.error("Error creating route:", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not create the route. Please try again.",
+        });
+    } finally {
+        setIsSaving(false);
     }
   };
 
@@ -198,7 +227,8 @@ export default function ProviderMapPage() {
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsSaveModalOpen(false)}>Cancel</Button>
-                    <Button onClick={handleSaveRoute} disabled={!newRouteName || newRouteDays.length === 0}>
+                    <Button onClick={handleSaveRoute} disabled={!newRouteName || newRouteDays.length === 0 || isSaving}>
+                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save
                     </Button>
                 </DialogFooter>
