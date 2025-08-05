@@ -90,7 +90,7 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
         if (vitalsData.fuelLiters && vitalsData.fuelCost) {
             const newFuelEntry: FuelLogEntry = {
                 id: `FUEL${Date.now()}`,
-                date: format(new Date(), 'yyyy-MM-dd'),
+                date: new Date().toISOString(),
                 liters: parseFloat(vitalsData.fuelLiters),
                 cost: parseFloat(vitalsData.fuelCost),
                 odometer: parseInt(vitalsData.odometer, 10),
@@ -103,7 +103,7 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
         if (vitalsData.maintenanceDesc && vitalsData.maintenanceCost) {
             const newMaintenanceEntry: MaintenanceLogEntry = {
                 id: `MAINT${Date.now()}`,
-                date: format(new Date(), 'yyyy-MM-dd'),
+                date: new Date().toISOString(),
                 description: vitalsData.maintenanceDesc,
                 cost: parseFloat(vitalsData.maintenanceCost),
                 odometer: parseInt(vitalsData.odometer, 10),
@@ -156,11 +156,11 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
                             </div>
                              <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground flex items-center gap-2"><Wrench className="w-4 h-4" /> Last Service</span>
-                                <span className="font-medium">{vehicle.lastServiceDate}</span>
+                                <span className="font-medium">{format(new Date(vehicle.lastServiceDate), 'yyyy-MM-dd')}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-4 h-4" /> Next Maintenance</span>
-                                <span className="font-medium">{vehicle.nextMaintenance}</span>
+                                <span className="font-medium">{format(new Date(vehicle.nextMaintenance), 'yyyy-MM-dd')}</span>
                             </div>
                         </CardContent>
                         <CardFooter className="grid grid-cols-2 gap-2">
@@ -210,22 +210,23 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
 
              {/* Vitals & History Modal */}
             <Dialog open={isVitalsModalOpen} onOpenChange={setIsVitalsModalOpen}>
-                <DialogContent className="max-w-3xl">
+                <DialogContent className="max-w-3xl flex flex-col h-[90vh] sm:h-auto">
                     <DialogHeader>
                         <DialogTitle>Vitals & History for {selectedVehicle?.licensePlate}</DialogTitle>
                         <DialogDescription>
                             Log new entries or review past fuel and maintenance records.
                         </DialogDescription>
                     </DialogHeader>
-                     <Tabs defaultValue="log" className="py-4">
+                     <Tabs defaultValue="log" className="flex flex-col flex-grow min-h-0">
                         <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="log">Log Entry</TabsTrigger>
                             <TabsTrigger value="fuel">Fuel History</TabsTrigger>
                             <TabsTrigger value="maintenance">Maintenance History</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="log" className="pt-4">
-                            <ScrollArea className="h-96 pr-6">
-                                <div className="space-y-6">
+                        <div className="relative flex-grow mt-4 overflow-hidden">
+                          <ScrollArea className="absolute inset-0 h-full w-full">
+                            <div className="p-1">
+                               <TabsContent value="log" className="mt-0 space-y-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="odometer" className="flex items-center gap-2"><Gauge className="w-4 h-4" /> Current Odometer (km)</Label>
                                         <Input id="odometer" type="number" value={vitalsData.odometer} onChange={e => setVitalsData({...vitalsData, odometer: e.target.value})} placeholder="e.g. 150234" />
@@ -266,54 +267,55 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </ScrollArea>
-                        </TabsContent>
-                        <TabsContent value="fuel" className="pt-4 max-h-96 overflow-y-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Date</TableHead><TableHead>Type</TableHead><TableHead>Liters</TableHead><TableHead className="text-right">Cost</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {selectedVehicle?.fuelLog?.slice().reverse().map(log => (
-                                        <TableRow key={log.id}>
-                                            <TableCell>{format(new Date(log.date), 'dd MMM, yyyy')}</TableCell>
-                                            <TableCell>{log.fuelType}</TableCell>
-                                            <TableCell>{log.liters.toFixed(2)}</TableCell>
-                                            <TableCell className="text-right">{log.cost.toFixed(2)} MT</TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {(!selectedVehicle?.fuelLog || selectedVehicle.fuelLog.length === 0) && (
-                                        <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No fuel history</TableCell></TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TabsContent>
-                         <TabsContent value="maintenance" className="pt-4 max-h-96 overflow-y-auto">
-                           <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Date</TableHead><TableHead>Description</TableHead><TableHead className="text-right">Cost</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {selectedVehicle?.maintenanceLog?.slice().reverse().map(log => (
-                                        <TableRow key={log.id}>
-                                            <TableCell>{format(new Date(log.date), 'dd MMM, yyyy')}</TableCell>
-                                            <TableCell>{log.description}</TableCell>
-                                            <TableCell className="text-right">{log.cost.toFixed(2)} MT</TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {(!selectedVehicle?.maintenanceLog || selectedVehicle.maintenanceLog.length === 0) && (
-                                         <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">No maintenance history</TableCell></TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TabsContent>
+                                </TabsContent>
+                                <TabsContent value="fuel" className="mt-0">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Date</TableHead><TableHead>Type</TableHead><TableHead>Liters</TableHead><TableHead className="text-right">Cost</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {selectedVehicle?.fuelLog?.slice().reverse().map(log => (
+                                                <TableRow key={log.id}>
+                                                    <TableCell>{format(new Date(log.date), 'dd MMM, yyyy')}</TableCell>
+                                                    <TableCell>{log.fuelType}</TableCell>
+                                                    <TableCell>{log.liters.toFixed(2)}</TableCell>
+                                                    <TableCell className="text-right">{log.cost.toFixed(2)} MT</TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {(!selectedVehicle?.fuelLog || selectedVehicle.fuelLog.length === 0) && (
+                                                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No fuel history</TableCell></TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </TabsContent>
+                                <TabsContent value="maintenance" className="mt-0">
+                                <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Date</TableHead><TableHead>Description</TableHead><TableHead className="text-right">Cost</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {selectedVehicle?.maintenanceLog?.slice().reverse().map(log => (
+                                                <TableRow key={log.id}>
+                                                    <TableCell>{format(new Date(log.date), 'dd MMM, yyyy')}</TableCell>
+                                                    <TableCell>{log.description}</TableCell>
+                                                    <TableCell className="text-right">{log.cost.toFixed(2)} MT</TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {(!selectedVehicle?.maintenanceLog || selectedVehicle.maintenanceLog.length === 0) && (
+                                                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">No maintenance history</TableCell></TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </TabsContent>
+                            </div>
+                           </ScrollArea>
+                        </div>
                     </Tabs>
-                    <DialogFooter>
+                    <DialogFooter className="flex-shrink-0 pt-4">
                         <Button variant="outline" onClick={() => setIsVitalsModalOpen(false)}>Cancel</Button>
                         <Button onClick={handleLogVitals}>Save Log Entry</Button>
                     </DialogFooter>
@@ -322,5 +324,3 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
         </>
     );
 }
-
-    
