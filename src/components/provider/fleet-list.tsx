@@ -17,6 +17,7 @@ import { useLanguage } from '@/context/language-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
+import { ScrollArea } from '../ui/scroll-area';
 
 const VehicleStatusBadge = ({ status }: { status: 'in-use' | 'maintenance' | 'available' }) => {
     const { t } = useLanguage();
@@ -222,47 +223,51 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
                             <TabsTrigger value="fuel">Fuel History</TabsTrigger>
                             <TabsTrigger value="maintenance">Maintenance History</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="log" className="space-y-6 pt-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="odometer" className="flex items-center gap-2"><Gauge className="w-4 h-4" /> Current Odometer (km)</Label>
-                                <Input id="odometer" type="number" value={vitalsData.odometer} onChange={e => setVitalsData({...vitalsData, odometer: e.target.value})} placeholder="e.g. 150234" />
-                            </div>
-                            <div className="p-4 border rounded-lg space-y-4">
-                                <h4 className="font-semibold flex items-center gap-2"><Droplets className="w-5 h-5 text-primary" /> Log Fueling</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <TabsContent value="log" className="pt-4">
+                            <ScrollArea className="h-96 pr-6">
+                                <div className="space-y-6">
                                     <div className="space-y-2">
-                                        <Label htmlFor="fuelType">Fuel Type</Label>
-                                        <Select value={vitalsData.fuelType} onValueChange={v => setVitalsData({...vitalsData, fuelType: v as FuelType})}>
-                                            <SelectTrigger><SelectValue/></SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="Diesel">Diesel</SelectItem>
-                                                <SelectItem value="Gasoline">Gasoline</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                        <Label htmlFor="odometer" className="flex items-center gap-2"><Gauge className="w-4 h-4" /> Current Odometer (km)</Label>
+                                        <Input id="odometer" type="number" value={vitalsData.odometer} onChange={e => setVitalsData({...vitalsData, odometer: e.target.value})} placeholder="e.g. 150234" />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="fuelLiters">Fuel Added (Liters)</Label>
-                                        <Input id="fuelLiters" type="number" value={vitalsData.fuelLiters} onChange={e => setVitalsData({...vitalsData, fuelLiters: e.target.value})} placeholder="e.g. 50"/>
+                                    <div className="p-4 border rounded-lg space-y-4">
+                                        <h4 className="font-semibold flex items-center gap-2"><Droplets className="w-5 h-5 text-primary" /> Log Fueling</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="fuelType">Fuel Type</Label>
+                                                <Select value={vitalsData.fuelType} onValueChange={v => setVitalsData({...vitalsData, fuelType: v as FuelType})}>
+                                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Diesel">Diesel</SelectItem>
+                                                        <SelectItem value="Gasoline">Gasoline</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="fuelLiters">Fuel Added (Liters)</Label>
+                                                <Input id="fuelLiters" type="number" value={vitalsData.fuelLiters} onChange={e => setVitalsData({...vitalsData, fuelLiters: e.target.value})} placeholder="e.g. 50"/>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="fuelCost">Total Cost (MT)</Label>
+                                                <Input id="fuelCost" type="number" value={vitalsData.fuelCost} onChange={e => setVitalsData({...vitalsData, fuelCost: e.target.value})} placeholder="e.g. 4500"/>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="fuelCost">Total Cost (MT)</Label>
-                                        <Input id="fuelCost" type="number" value={vitalsData.fuelCost} onChange={e => setVitalsData({...vitalsData, fuelCost: e.target.value})} placeholder="e.g. 4500"/>
+                                    <div className="p-4 border rounded-lg space-y-4">
+                                        <h4 className="font-semibold flex items-center gap-2"><Hammer className="w-5 h-5 text-primary" /> Log Maintenance</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2 col-span-2 md:col-span-1">
+                                                <Label htmlFor="maintenanceDesc">Description</Label>
+                                                <Input id="maintenanceDesc" value={vitalsData.maintenanceDesc} onChange={e => setVitalsData({...vitalsData, maintenanceDesc: e.target.value})} placeholder="e.g. Oil change"/>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="maintenanceCost">Total Cost (MT)</Label>
+                                                <Input id="maintenanceCost" type="number" value={vitalsData.maintenanceCost} onChange={e => setVitalsData({...vitalsData, maintenanceCost: e.target.value})} placeholder="e.g. 2500"/>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                             <div className="p-4 border rounded-lg space-y-4">
-                                <h4 className="font-semibold flex items-center gap-2"><Hammer className="w-5 h-5 text-primary" /> Log Maintenance</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                     <div className="space-y-2 col-span-2 md:col-span-1">
-                                        <Label htmlFor="maintenanceDesc">Description</Label>
-                                        <Input id="maintenanceDesc" value={vitalsData.maintenanceDesc} onChange={e => setVitalsData({...vitalsData, maintenanceDesc: e.target.value})} placeholder="e.g. Oil change"/>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="maintenanceCost">Total Cost (MT)</Label>
-                                        <Input id="maintenanceCost" type="number" value={vitalsData.maintenanceCost} onChange={e => setVitalsData({...vitalsData, maintenanceCost: e.target.value})} placeholder="e.g. 2500"/>
-                                    </div>
-                                </div>
-                            </div>
+                            </ScrollArea>
                         </TabsContent>
                         <TabsContent value="fuel" className="pt-4 max-h-96 overflow-y-auto">
                             <Table>
@@ -272,14 +277,14 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {selectedVehicle?.fuelLog?.map(log => (
+                                    {selectedVehicle?.fuelLog?.slice().reverse().map(log => (
                                         <TableRow key={log.id}>
                                             <TableCell>{format(new Date(log.date), 'dd MMM, yyyy')}</TableCell>
                                             <TableCell>{log.fuelType}</TableCell>
                                             <TableCell>{log.liters.toFixed(2)}</TableCell>
                                             <TableCell className="text-right">{log.cost.toFixed(2)} MT</TableCell>
                                         </TableRow>
-                                    )).reverse()}
+                                    ))}
                                     {(!selectedVehicle?.fuelLog || selectedVehicle.fuelLog.length === 0) && (
                                         <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No fuel history</TableCell></TableRow>
                                     )}
@@ -294,13 +299,13 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {selectedVehicle?.maintenanceLog?.map(log => (
+                                    {selectedVehicle?.maintenanceLog?.slice().reverse().map(log => (
                                         <TableRow key={log.id}>
                                             <TableCell>{format(new Date(log.date), 'dd MMM, yyyy')}</TableCell>
                                             <TableCell>{log.description}</TableCell>
                                             <TableCell className="text-right">{log.cost.toFixed(2)} MT</TableCell>
                                         </TableRow>
-                                    )).reverse()}
+                                    ))}
                                     {(!selectedVehicle?.maintenanceLog || selectedVehicle.maintenanceLog.length === 0) && (
                                          <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">No maintenance history</TableCell></TableRow>
                                     )}
@@ -317,3 +322,5 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
         </>
     );
 }
+
+    
