@@ -183,15 +183,12 @@ export default function ClientList() {
         toast({ variant: 'destructive', title: 'Missing Information', description: 'Name and address are required.'});
         return;
     }
-
-    // The logic to auto-find and link a user is removed from here
-    // to prevent security rule violations. Linking will happen when the client signs up.
     
     const clientToAdd = {
         ...initialNewClientState(),
         ...newClient,
         providerId: user.uid,
-        userId: null, // Always create as unlinked.
+        userId: null, // Always create as unlinked for now.
         balance: parseFloat(newClient.balance as any) || 0,
         nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) : Timestamp.fromDate(new Date()),
         nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) : Timestamp.fromDate(new Date()),
@@ -216,7 +213,8 @@ export default function ClientList() {
   };
 
   const onNewClientMapClick = (e: any) => {
-    setNewClient(prev => ({...prev, coordinates: e.lngLat}));
+    const { lng, lat } = e.lngLat;
+    setNewClient(prev => ({ ...prev, coordinates: { lng, lat } }));
   }
 
   return (
@@ -396,5 +394,3 @@ export default function ClientList() {
     </>
   );
 }
-
-    
