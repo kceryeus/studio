@@ -2,12 +2,9 @@
 "use client";
 
 import * as React from "react";
-import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, MapLayerMouseEvent } from "react-map-gl/maplibre";
+import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, MapLayerMouseEvent, useMap } from "react-map-gl/maplibre";
 import type { MapRef, IControl } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
-import '@maplibre/maplibre-gl-directions/dist/maplibre-gl-directions.css';
-import MaplibreDirections from '@maplibre/maplibre-gl-directions';
-
 
 import type { Client, GarbageStatus, Route } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -30,6 +27,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+
+declare global {
+    interface Window {
+        MaplibreDirections: any;
+    }
+}
 
 const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/streets-v2/style.json?key=xQ1eFBidgVoYA8BIrNEu`;
 
@@ -63,6 +66,7 @@ class DirectionsControl implements IControl {
   _directions: any;
   _map: any;
   _onRouteChanged: (e: any) => void;
+  _controlContainer: any;
 
   constructor(onRouteChanged: (e: any) => void) {
     this._onRouteChanged = onRouteChanged;
@@ -70,9 +74,15 @@ class DirectionsControl implements IControl {
 
   onAdd(map: any) {
     this._map = map;
-    this._map.getCanvas().style.cursor = '';
+    this._controlContainer = document.createElement('div');
+    this._controlContainer.className = 'maplibregl-ctrl';
+
+    if (!window.MaplibreDirections) {
+      console.error("MaplibreDirections is not available on the window object.");
+      return this._controlContainer;
+    }
     
-    this._directions = new MaplibreDirections(this._map, {
+    this._directions = new window.MaplibreDirections({
       api: 'https://routing.openstreetmap.de/routed-car/route/v1',
       profile: 'driving',
       makePostRequest: true,
@@ -84,11 +94,10 @@ class DirectionsControl implements IControl {
       interactive: true,
     });
     
+    this._map.addControl(this._directions, 'top-left');
     this._directions.on('route', this._onRouteChanged);
     
-    // The plugin adds its own DOM element, so we return an empty one.
-    const div = document.createElement('div');
-    return div;
+    return this._controlContainer;
   }
 
   onRemove() {
@@ -114,21 +123,34 @@ class DirectionsControl implements IControl {
 }
 
 function Directions({ onRouteChanged, route }: { onRouteChanged: (e: any) => void, route: Route | null }) {
-  const directionsControl = React.useMemo(() => new DirectionsControl(onRouteChanged), [onRouteChanged]);
+  const { current: map } = useMap();
+  const directionsControlRef = React.useRef<DirectionsControl | null>(null);
 
-  useControl(() => directionsControl, {position: 'top-left'});
+  React.useEffect(() => {
+    if (map) {
+      const directionsControl = new DirectionsControl(onRouteChanged);
+      directionsControlRef.current = directionsControl;
+      map.addControl(directionsControl);
+
+      return () => {
+        if (map && directionsControl) {
+          map.removeControl(directionsControl);
+        }
+      };
+    }
+  }, [map, onRouteChanged]);
   
   React.useEffect(() => {
-    const directions = directionsControl.getDirections();
-    if (directions) {
+    const directionsControl = directionsControlRef.current;
+    if (directionsControl) {
        if (route && route.path && route.path.length >= 2) {
           const waypoints = route.path.map(p => [p.lng, p.lat]);
-          directions.setWaypoints(waypoints);
+          directionsControl.setWaypoints(waypoints);
        } else if (!route) {
-          directions.setWaypoints([]);
+          directionsControl.setWaypoints([]);
        }
     }
-  }, [route, directionsControl]);
+  }, [route]);
 
   return null;
 }
