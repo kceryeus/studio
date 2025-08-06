@@ -58,52 +58,53 @@ const GarbageStatusIcon = ({
 };
 
 function Directions({ route, onRouteChanged }: { route: Route | null, onRouteChanged: (e: any) => void }) {
-  const mapRef = React.useContext(MapContext);
-
-  React.useEffect(() => {
-    const map = mapRef?.getMap();
-    if (!map) return;
-
-    const directions = new MaplibreDirections(map, {
-        api: 'https://routing.openstreetmap.de/routed-car/route/v1',
-        profile: 'driving',
-        makePostRequest: true,
-        controls: {
-            instructions: true,
-            waypoints: true,
-            profileSwitcher: false,
-        },
-        interactive: true,
+  const directions = useControl<MaplibreDirections>(() => {
+    const ctrl = new MaplibreDirections({
+      api: 'https://routing.openstreetmap.de/routed-car/route/v1',
+      profile: 'driving',
+      makePostRequest: true,
+      controls: {
+        instructions: true,
+        waypoints: true,
+        profileSwitcher: false,
+      },
+      interactive: true,
     });
+    return ctrl;
+  }, {
+    position: 'top-left'
+  });
+  
+  React.useEffect(() => {
+    if (!directions) return;
     
-    map.addControl(directions, 'top-left');
-    directions.on('route', onRouteChanged);
+    const handleRouteEvent = (e: any) => {
+        if(e.route && e.route.length > 0) {
+            onRouteChanged(e);
+        }
+    };
     
-    if (route && route.path && route.path.length >= 2) {
-      const waypoints = route.path.map(p => [p.lng, p.lat]);
-      directions.setWaypoints(waypoints);
-    } else if (!route) {
-      directions.setWaypoints([]);
-    }
+    directions.on('route', handleRouteEvent);
 
     return () => {
-      // The directions control has a bug where it might not be removable
-      // if it hasn't fully loaded, so we wrap in a try/catch
-      try {
-        if (map.hasControl(directions)) {
-          map.removeControl(directions);
-        }
-      } catch (e) {
-          console.error("Failed to remove directions control", e);
-      }
+      directions.off('route', handleRouteEvent);
     };
-  }, [mapRef, route, onRouteChanged]);
+  }, [directions, onRouteChanged]);
+
+  React.useEffect(() => {
+    if (directions) {
+       if (route && route.path && route.path.length >= 2) {
+          const waypoints = route.path.map(p => [p.lng, p.lat]);
+          directions.setWaypoints(waypoints);
+        } else if (!route) {
+          directions.setWaypoints([]);
+        }
+    }
+  }, [route, directions]);
+
 
   return null;
 }
-
-
-const MapContext = React.createContext<MapRef | null>(null);
 
 
 export default function CollectionMap({ 
@@ -118,8 +119,6 @@ export default function CollectionMap({
   const [clientData, setClientData] = React.useState<Client[]>(clients);
   const [dialogClient, setDialogClient] = React.useState<Client | null>(null);
   const [popupInfo, setPopupInfo] = React.useState<Client | null>(null);
-  const [isMapLoaded, setIsMapLoaded] = React.useState(false);
-  const mapRef = React.useRef<MapRef>(null);
 
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -139,9 +138,7 @@ export default function CollectionMap({
   
   return (
     <div className="h-full w-full relative rounded-lg shadow-md overflow-hidden">
-      <MapContext.Provider value={mapRef.current}>
         <Map
-          ref={mapRef}
           initialViewState={{
             longitude: 32.583,
             latitude: -25.965,
@@ -151,11 +148,10 @@ export default function CollectionMap({
           style={{width: '100%', height: '100%'}}
           maxBounds={mozambiqueBounds}
           mapLib={import('maplibre-gl')}
-          onLoad={() => setIsMapLoaded(true)}
         >
           <FullscreenControl position="top-right" />
           <NavigationControl position="top-right" />
-          {isMapLoaded && <Directions onRouteChanged={onRouteChanged} route={route} />}
+          <Directions onRouteChanged={onRouteChanged} route={route} />
 
           {clientData.map((client) => (
             <Marker
@@ -208,7 +204,6 @@ export default function CollectionMap({
             </Popup>
           )}
         </Map>
-      </MapContext.Provider>
       <Dialog open={!!dialogClient} onOpenChange={() => setDialogClient(null)}>
         <DialogContent>
           <DialogHeader>
