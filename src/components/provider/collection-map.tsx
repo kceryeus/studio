@@ -68,7 +68,7 @@ class DirectionsControl implements IControl {
 
     onAdd(map: any) {
         this._map = map;
-        this._directions = new MaplibreDirections({
+        this._directions = new MaplibreDirections(this._map, {
             api: 'https://routing.openstreetmap.de/routed-car/route/v1',
             profile: 'driving',
             makePostRequest: true,
