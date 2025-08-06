@@ -1,3 +1,4 @@
+
 "use client"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
@@ -5,7 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useRouter } from "next/navigation"
 import { signInWithEmailAndPassword } from "firebase/auth"
-import { auth } from "@/lib/firebase"
+import { auth, db } from "@/lib/firebase"
+import { doc, getDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -49,15 +51,28 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     try {
-        await signInWithEmailAndPassword(auth, values.email, values.password);
-        toast({
-            title: t('login_successful'),
-            description: t('redirecting_to_dashboard'),
-        });
-        // For this prototype, we don't know the user type yet.
-        // We will redirect to a generic dashboard or let the user choose.
-        // For now, let's just go to the provider dashboard as a default.
-        router.push("/provider/dashboard");
+        const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+        const user = userCredential.user;
+
+        // Get user role from Firestore
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            toast({
+                title: t('login_successful'),
+                description: t('redirecting_to_dashboard'),
+            });
+            if (userData.accountType === 'provider') {
+                router.push("/provider/dashboard");
+            } else {
+                router.push("/client/dashboard");
+            }
+        } else {
+            // This case should ideally not happen if signup is done correctly
+            throw new Error("User data not found in database.");
+        }
     } catch (error: any) {
         let errorMessage = "An unknown error occurred.";
         if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {

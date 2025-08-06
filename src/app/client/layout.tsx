@@ -26,7 +26,7 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const { t } = useLanguage();
-  const { user, loading } = useAuth();
+  const { user, userData, loading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -36,12 +36,16 @@ export default function ClientLayout({
   };
 
   React.useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
+    if (!loading) {
+      if (!user) {
+        router.push('/login');
+      } else if (userData?.accountType !== 'client') {
+        router.push('/provider/dashboard');
+      }
     }
-  }, [user, loading, router]);
+  }, [user, userData, loading, router]);
   
-  if (loading || !user) {
+  if (loading || !user || userData?.accountType !== 'client') {
     return (
         <div className="flex min-h-screen items-center justify-center">
             <p>Loading...</p>
