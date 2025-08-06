@@ -59,40 +59,20 @@ const GarbageStatusIcon = ({
 
 function Directions({ route, onRouteChanged }: { route: Route | null, onRouteChanged: (e: any) => void }) {
   const directions = useControl<MaplibreDirections>(() => {
-    class DirectionsControl implements IControl {
-      _directions: MaplibreDirections | null = null;
-      _map: any = null;
-      _onRouteChanged: (e: any) => void;
+    const ctrl = new MaplibreDirections({
+      api: 'https://routing.openstreetmap.de/routed-car/route/v1',
+      profile: 'driving',
+      makePostRequest: true,
+      controls: {
+          instructions: true,
+          waypoints: true,
+          profileSwitcher: false,
+      },
+      interactive: true,
+    });
 
-      constructor(onRouteChanged: (e: any) => void) {
-        this._onRouteChanged = onRouteChanged;
-      }
-      
-      onAdd(map: any) {
-        this._map = map;
-        this._directions = new MaplibreDirections(this._map, {
-            api: 'https://routing.openstreetmap.de/routed-car/route/v1',
-            profile: 'driving',
-            makePostRequest: true,
-            controls: {
-                instructions: true,
-                waypoints: true,
-                profileSwitcher: false,
-            },
-            interactive: true,
-        });
-        this._directions.on('route', this._onRouteChanged);
-        return this._directions.onAdd(map);
-      }
-
-      onRemove() {
-        if (this._directions) {
-            this._directions.off('route', this._onRouteChanged);
-            this._directions.onRemove();
-        }
-      }
-    }
-    return new DirectionsControl(onRouteChanged) as any;
+    ctrl.on('route', onRouteChanged);
+    return ctrl;
   }, {
     position: 'top-left'
   });
