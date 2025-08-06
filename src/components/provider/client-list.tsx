@@ -57,7 +57,7 @@ const LinkedBadge = ({ isLinked }: { isLinked: boolean }) => {
   );
 };
 
-const initialNewClientState: Partial<Client> = {
+const initialNewClientState = (): Partial<Client> => ({
   name: '',
   address: '',
   email: '',
@@ -65,14 +65,15 @@ const initialNewClientState: Partial<Client> = {
   collectionStatus: 'active',
   paymentStatus: 'due',
   garbageStatus: 'pending',
-  nextCollectionDate: '',
-  nextPaymentDueDate: '',
+  nextCollectionDate: format(new Date(), 'yyyy-MM-dd'),
+  nextPaymentDueDate: format(new Date(), 'yyyy-MM-dd'),
   paymentHistory: [],
   balance: 0,
   sharesLocation: true,
   routeId: null,
   userId: null,
-};
+});
+
 
 // Helper function to convert Firestore Timestamps to strings
 const clientFromDoc = (doc: DocumentData): Client => {
@@ -101,7 +102,7 @@ export default function ClientList() {
   const [editingClient, setEditingClient] = useState<Partial<Client> | null>(null);
   
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
-  const [newClient, setNewClient] = useState<Partial<Client>>(initialNewClientState);
+  const [newClient, setNewClient] = useState<Partial<Client>>(initialNewClientState());
 
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -186,25 +187,30 @@ export default function ClientList() {
 
     let userId: string | null = null;
     if (newClient.email) {
-        const userQuery = query(collection(db, "users"), where("email", "==", newClient.email), where("accountType", "==", "client"));
-        const userSnapshot = await getDocs(userQuery);
-        if (!userSnapshot.empty) {
-            userId = userSnapshot.docs[0].id;
-             toast({
-                title: 'Client Account Found',
-                description: `Linked this profile to the existing user account for ${newClient.email}.`
-            })
+        try {
+            const userQuery = query(collection(db, "users"), where("email", "==", newClient.email), where("accountType", "==", "client"));
+            const userSnapshot = await getDocs(userQuery);
+            if (!userSnapshot.empty) {
+                userId = userSnapshot.docs[0].id;
+                toast({
+                    title: 'Client Account Found',
+                    description: `Linked this profile to the existing user account for ${newClient.email}.`
+                })
+            }
+        } catch (error) {
+            console.error("Error checking for existing user:", error);
+            // Don't block client creation if this check fails, just log it.
         }
     }
 
     const clientToAdd = {
-        ...initialNewClientState,
+        ...initialNewClientState(),
         ...newClient,
         providerId: user.uid,
         userId: userId, // This will be null if no user is found, creating an "unclaimed" profile
         balance: parseFloat(newClient.balance as any) || 0,
-        nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) : Timestamp.now(),
-        nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) : Timestamp.now(),
+        nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) : Timestamp.fromDate(new Date()),
+        nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) : Timestamp.fromDate(new Date()),
     };
 
     try {
@@ -214,13 +220,13 @@ export default function ClientList() {
             description: `Successfully added ${newClient.name}.`,
         });
         setIsAddClientModalOpen(false);
-        setNewClient(initialNewClientState);
+        setNewClient(initialNewClientState());
     } catch (error) {
         console.error("Error adding client: ", error);
         toast({
             variant: "destructive",
             title: "Failed to Add Client",
-            description: "Please check your data and try again."
+            description: "Could not save client data. Please check console for errors."
         })
     }
   };
@@ -406,3 +412,5 @@ export default function ClientList() {
     </>
   );
 }
+
+    
