@@ -5,6 +5,8 @@ import * as React from "react";
 import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, MapLayerMouseEvent, useMap } from "react-map-gl/maplibre";
 import type { MapRef, IControl } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
+import '@maplibre/maplibre-gl-directions/dist/maplibre-gl-directions.css';
+import MaplibreDirections from '@maplibre/maplibre-gl-directions';
 
 import type { Client, GarbageStatus, Route } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -27,12 +29,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-
-declare global {
-    interface Window {
-        MaplibreDirections: any;
-    }
-}
 
 const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/streets-v2/style.json?key=xQ1eFBidgVoYA8BIrNEu`;
 
@@ -63,82 +59,68 @@ const GarbageStatusIcon = ({
 };
 
 class DirectionsControl implements IControl {
-  _directions: any;
-  _map: any;
-  _onRouteChanged: (e: any) => void;
-  _controlContainer: any;
+    _directions: any;
+    _map: any;
+    _onRouteChanged: (e: any) => void;
+    _controlContainer: any;
 
-  constructor(onRouteChanged: (e: any) => void) {
-    this._onRouteChanged = onRouteChanged;
-  }
-
-  onAdd(map: any) {
-    this._map = map;
-    this._controlContainer = document.createElement('div');
-    this._controlContainer.className = 'maplibregl-ctrl';
-
-    if (!window.MaplibreDirections) {
-      console.error("MaplibreDirections is not available on the window object.");
-      return this._controlContainer;
+    constructor(onRouteChanged: (e: any) => void) {
+        this._onRouteChanged = onRouteChanged;
     }
-    
-    this._directions = new window.MaplibreDirections({
-      api: 'https://routing.openstreetmap.de/routed-car/route/v1',
-      profile: 'driving',
-      makePostRequest: true,
-      controls: {
-        instructions: true,
-        waypoints: true,
-        profileSwitcher: false,
-      },
-      interactive: true,
-    });
-    
-    this._map.addControl(this._directions, 'top-left');
-    this._directions.on('route', this._onRouteChanged);
-    
-    return this._controlContainer;
-  }
 
-  onRemove() {
-    if (this._directions) {
-      this._directions.off('route', this._onRouteChanged);
-       if (this._map && this._map.hasControl(this._directions)) {
-          this._map.removeControl(this._directions);
-       }
+    onAdd(map: any) {
+        this._map = map;
+        this._controlContainer = document.createElement('div');
+        this._controlContainer.className = 'maplibregl-ctrl';
+
+        this._directions = new MaplibreDirections({
+            api: 'https://routing.openstreetmap.de/routed-car/route/v1',
+            profile: 'driving',
+            makePostRequest: true,
+            controls: {
+                instructions: true,
+                waypoints: true,
+                profileSwitcher: false,
+            },
+            interactive: true,
+        });
+        
+        this._map.addControl(this._directions, 'top-left');
+        this._directions.on('route', this._onRouteChanged);
+        
+        return this._controlContainer;
     }
-    this._map = null;
-    this._directions = null;
-  }
 
-  setWaypoints(waypoints: [number, number][]) {
-    if (this._directions) {
-      this._directions.setWaypoints(waypoints);
+    onRemove() {
+        if (this._directions) {
+            this._directions.off('route', this._onRouteChanged);
+            if (this._map && this._map.hasControl(this._directions)) {
+                this._map.removeControl(this._directions);
+            }
+        }
+        this._map = null;
+        this._directions = null;
     }
-  }
 
-  getDirections() {
-      return this._directions;
-  }
+    setWaypoints(waypoints: [number, number][]) {
+        if (this._directions) {
+            this._directions.setWaypoints(waypoints);
+        }
+    }
+
+    getDirections() {
+        return this._directions;
+    }
 }
 
 function Directions({ onRouteChanged, route }: { onRouteChanged: (e: any) => void, route: Route | null }) {
-  const { current: map } = useMap();
   const directionsControlRef = React.useRef<DirectionsControl | null>(null);
 
-  React.useEffect(() => {
-    if (map) {
-      const directionsControl = new DirectionsControl(onRouteChanged);
-      directionsControlRef.current = directionsControl;
-      map.addControl(directionsControl);
-
-      return () => {
-        if (map && directionsControl) {
-          map.removeControl(directionsControl);
-        }
-      };
-    }
-  }, [map, onRouteChanged]);
+  useControl(() => {
+    const directionsControl = new DirectionsControl(onRouteChanged);
+    directionsControlRef.current = directionsControl;
+    return directionsControl;
+  });
   
   React.useEffect(() => {
     const directionsControl = directionsControlRef.current;
@@ -154,6 +136,7 @@ function Directions({ onRouteChanged, route }: { onRouteChanged: (e: any) => voi
 
   return null;
 }
+
 
 export default function CollectionMap({ 
     clients,
