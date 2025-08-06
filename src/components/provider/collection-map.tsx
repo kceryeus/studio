@@ -2,8 +2,8 @@
 "use client";
 
 import * as React from "react";
-import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, Source, Layer, MapLayerMouseEvent } from "react-map-gl/maplibre";
-import type { MapRef } from "react-map-gl/maplibre";
+import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, MapLayerMouseEvent } from "react-map-gl/maplibre";
+import type { MapRef, IControl } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import type { Client, GarbageStatus, Route } from "@/lib/types";
@@ -63,56 +63,71 @@ const GarbageStatusIcon = ({
   }
 };
 
+class DirectionsControl implements IControl {
+  _directions: any;
+  _map: any;
+  _onRouteChanged: (e: any) => void;
 
-const DirectionsControl = ({ onRouteChanged, route }: { onRouteChanged: (e: any) => void, route: Route | null }) => {
-    const map = useControl<any>(
-        () => {
-            if (!window.MaplibreDirections) return null;
-            const directions = new window.MaplibreDirections({
-                 api: 'https://routing.openstreetmap.de/routed-car/route/v1',
-                 profile: 'driving',
-                 makePostRequest: true,
-                 controls: {
-                     instructions: true,
-                     waypoints: true,
-                     profileSwitcher: false,
-                 },
-                 interactive: true,
-            });
+  constructor(onRouteChanged: (e: any) => void) {
+    this._onRouteChanged = onRouteChanged;
+  }
 
-            directions.on('route', onRouteChanged);
-            return directions;
-        },
-        (mapInstance) => { // onAdd
-             if (route && route.path && route.path.length >= 2) {
-                const waypoints = route.path.map(p => [p.lng, p.lat]);
-                mapInstance.setWaypoints(waypoints);
-            } else {
-                 mapInstance.setWaypoints([
-                    [-25.9613, 32.5895],
-                    [-25.9754, 32.5768],
-                ]);
-            }
-        },
-        (mapInstance) => { // onRemove
-            mapInstance.off('route', onRouteChanged);
-        },
-        { position: 'top-left' }
-    );
+  onAdd(map: any) {
+    this._map = map;
+    this._map.getCanvas().style.cursor = '';
     
-     React.useEffect(() => {
-        if (!map) return;
-        if (route && route.path && route.path.length >= 2) {
-            const waypoints = route.path.map(p => [p.lng, p.lat]);
-            map.setWaypoints(waypoints);
-        } else if (!route) {
-            // Clear waypoints if no route is selected
-             map.setWaypoints([]);
-        }
-    }, [route, map]);
+    if (!window.MaplibreDirections) {
+      console.error("MaplibreDirections is not available on the window object.");
+      const div = document.createElement('div');
+      return div;
+    }
+    
+    this._directions = new window.MaplibreDirections({
+      api: 'https://routing.openstreetmap.de/routed-car/route/v1',
+      profile: 'driving',
+      makePostRequest: true,
+      controls: {
+        instructions: true,
+        waypoints: true,
+        profileSwitcher: false,
+      },
+      interactive: true,
+    });
+    
+    this._directions.on('route', this._onRouteChanged);
+    
+    map.addControl(this._directions, 'top-left');
+    
+    // We return a dummy element because the plugin adds itself to the map.
+    const div = document.createElement('div');
+    return div;
+  }
 
+  onRemove() {
+    if (this._directions) {
+      this._directions.off('route', this._onRouteChanged);
+      if (this._map) {
+          // The plugin's remove method is not well documented/reliable
+          // so we manually remove the control element.
+          const controlContainer = this._directions.container;
+          if (controlContainer && controlContainer.parentNode) {
+              controlContainer.parentNode.removeChild(controlContainer);
+          }
+      }
+    }
+    this._map = null;
+    this._directions = null;
+  }
 
-  return null;
+  setWaypoints(waypoints: [number, number][]) {
+    if (this._directions) {
+      this._directions.setWaypoints(waypoints);
+    }
+  }
+
+  getDirections() {
+      return this._directions;
+  }
 }
 
 export default function CollectionMap({ 
@@ -145,6 +160,22 @@ export default function CollectionMap({
     setDialogClient(null);
   };
   
+  const directionsControl = React.useMemo(() => new DirectionsControl(onRouteChanged), [onRouteChanged]);
+
+  useControl(() => directionsControl, {position: 'top-left'});
+  
+  React.useEffect(() => {
+    const directions = directionsControl.getDirections();
+    if (directions) {
+       if (route && route.path && route.path.length >= 2) {
+          const waypoints = route.path.map(p => [p.lng, p.lat]);
+          directionsControl.setWaypoints(waypoints);
+       } else if (!route) {
+          directionsControl.setWaypoints([]);
+       }
+    }
+  }, [route, directionsControl]);
+
   return (
     <div className="h-full w-full relative rounded-lg shadow-md overflow-hidden">
       <Map
@@ -161,7 +192,6 @@ export default function CollectionMap({
       >
         <FullscreenControl position="top-right" />
         <NavigationControl position="top-right" />
-        <DirectionsControl onRouteChanged={onRouteChanged} route={route} />
 
         {clientData.map((client) => (
           <Marker
