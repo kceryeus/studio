@@ -21,7 +21,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet"></link>
-        <link href="https://unpkg.com/@maplibre/maplibre-gl-directions@^0.6.0-alpha.2/dist/maplibre-gl-directions.css" rel="stylesheet" />
+        <link href="https://unpkg.com/@maplibre/maplibre-gl-directions@latest/dist/maplibre-gl-directions.css" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
         <LanguageProvider>
