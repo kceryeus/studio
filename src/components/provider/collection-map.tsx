@@ -58,21 +58,13 @@ const GarbageStatusIcon = ({
 };
 
 class DirectionsControl implements IControl {
-    _directions: any;
+    _directions: MaplibreDirections;
     _map: any;
     _onRouteChanged: (e: any) => void;
-    _controlContainer: any;
 
     constructor(onRouteChanged: (e: any) => void) {
         this._onRouteChanged = onRouteChanged;
-    }
-
-    onAdd(map: any) {
-        this._map = map;
-        this._controlContainer = document.createElement('div');
-        this._controlContainer.className = 'maplibregl-ctrl';
-        
-        this._directions = new MaplibreDirections(this._map, {
+        this._directions = new MaplibreDirections({
             api: 'https://routing.openstreetmap.de/routed-car/route/v1',
             profile: 'driving',
             makePostRequest: true,
@@ -83,32 +75,22 @@ class DirectionsControl implements IControl {
             },
             interactive: true,
         });
-        
+    }
+
+    onAdd(map: any) {
+        this._map = map;
+        this._map.addControl(this._directions, 'top-left');
         this._directions.on('route', this._onRouteChanged);
-        
-        return this._controlContainer;
+        // The plugin adds its own container, so we return an empty one to satisfy the IControl interface
+        return document.createElement('div');
     }
 
     onRemove() {
-        if (this._directions) {
-            this._directions.off('route', this._onRouteChanged);
-            this._directions.clear();
-        }
-        if (this._controlContainer && this._controlContainer.parentNode) {
-            this._controlContainer.parentNode.removeChild(this._controlContainer);
-        }
-        this._map = null;
-        this._directions = null;
+        this._directions.onRemove(this._map);
     }
-
+    
     setWaypoints(waypoints: [number, number][]) {
-        if (this._directions) {
-            this._directions.setWaypoints(waypoints);
-        }
-    }
-
-    getDirections() {
-        return this._directions;
+        this._directions.setWaypoints(waypoints);
     }
 }
 
@@ -120,7 +102,7 @@ function Directions({ onRouteChanged, route }: { onRouteChanged: (e: any) => voi
     const directionsControl = new DirectionsControl(onRouteChanged);
     directionsControlRef.current = directionsControl;
     return directionsControl;
-  }, { position: 'top-left' });
+  });
   
   React.useEffect(() => {
     const directionsControl = directionsControlRef.current;
