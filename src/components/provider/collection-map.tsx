@@ -58,12 +58,16 @@ const GarbageStatusIcon = ({
 };
 
 class DirectionsControl implements IControl {
-    _directions: MaplibreDirections;
+    _directions: MaplibreDirections | null = null;
     _map: any;
     _onRouteChanged: (e: any) => void;
 
     constructor(onRouteChanged: (e: any) => void) {
         this._onRouteChanged = onRouteChanged;
+    }
+
+    onAdd(map: any) {
+        this._map = map;
         this._directions = new MaplibreDirections({
             api: 'https://routing.openstreetmap.de/routed-car/route/v1',
             profile: 'driving',
@@ -75,10 +79,6 @@ class DirectionsControl implements IControl {
             },
             interactive: true,
         });
-    }
-
-    onAdd(map: any) {
-        this._map = map;
         this._map.addControl(this._directions, 'top-left');
         this._directions.on('route', this._onRouteChanged);
         // The plugin adds its own container, so we return an empty one to satisfy the IControl interface
@@ -86,11 +86,15 @@ class DirectionsControl implements IControl {
     }
 
     onRemove() {
-        this._directions.onRemove(this._map);
+        if (this._directions) {
+            this._directions.onRemove(this._map);
+        }
     }
     
     setWaypoints(waypoints: [number, number][]) {
-        this._directions.setWaypoints(waypoints);
+        if (this._directions) {
+            this._directions.setWaypoints(waypoints);
+        }
     }
 }
 
