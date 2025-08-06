@@ -13,9 +13,14 @@ export default function ProviderPaymentsPage() {
     const { t } = useLanguage();
     const { user } = useAuth();
     const [clients, setClients] = useState<Client[]>([]);
+    const [loading, setLoading] = useState(true);
+
 
     useEffect(() => {
-        if (!user) return;
+        if (!user) {
+            setLoading(false);
+            return;
+        };
     
         const q = query(collection(db, "clients"), where("providerId", "==", user.uid));
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -24,6 +29,10 @@ export default function ProviderPaymentsPage() {
                 clientsData.push({ id: doc.id, ...doc.data() } as Client);
             });
             setClients(clientsData);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching clients for payments page: ", error);
+            setLoading(false);
         });
 
         return () => unsubscribe();

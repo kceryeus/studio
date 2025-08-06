@@ -19,7 +19,10 @@ export default function ProviderDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+        setLoading(false);
+        return;
+    };
     
     const q = query(collection(db, "clients"), where("providerId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
