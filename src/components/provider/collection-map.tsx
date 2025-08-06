@@ -130,6 +130,27 @@ class DirectionsControl implements IControl {
   }
 }
 
+// This is the new component that will use the useControl hook
+function Directions({ onRouteChanged, route }: { onRouteChanged: (e: any) => void, route: Route | null }) {
+  const directionsControl = React.useMemo(() => new DirectionsControl(onRouteChanged), [onRouteChanged]);
+
+  useControl(() => directionsControl, {position: 'top-left'});
+  
+  React.useEffect(() => {
+    const directions = directionsControl.getDirections();
+    if (directions) {
+       if (route && route.path && route.path.length >= 2) {
+          const waypoints = route.path.map(p => [p.lng, p.lat]);
+          directionsControl.setWaypoints(waypoints);
+       } else if (!route) {
+          directionsControl.setWaypoints([]);
+       }
+    }
+  }, [route, directionsControl]);
+
+  return null; // This component doesn't render anything itself
+}
+
 export default function CollectionMap({ 
     clients,
     route,
@@ -160,22 +181,6 @@ export default function CollectionMap({
     setDialogClient(null);
   };
   
-  const directionsControl = React.useMemo(() => new DirectionsControl(onRouteChanged), [onRouteChanged]);
-
-  useControl(() => directionsControl, {position: 'top-left'});
-  
-  React.useEffect(() => {
-    const directions = directionsControl.getDirections();
-    if (directions) {
-       if (route && route.path && route.path.length >= 2) {
-          const waypoints = route.path.map(p => [p.lng, p.lat]);
-          directionsControl.setWaypoints(waypoints);
-       } else if (!route) {
-          directionsControl.setWaypoints([]);
-       }
-    }
-  }, [route, directionsControl]);
-
   return (
     <div className="h-full w-full relative rounded-lg shadow-md overflow-hidden">
       <Map
@@ -192,6 +197,7 @@ export default function CollectionMap({
       >
         <FullscreenControl position="top-right" />
         <NavigationControl position="top-right" />
+        <Directions onRouteChanged={onRouteChanged} route={route} />
 
         {clientData.map((client) => (
           <Marker
@@ -274,3 +280,4 @@ export default function CollectionMap({
     </div>
   );
 }
+
