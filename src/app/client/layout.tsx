@@ -1,7 +1,7 @@
 
 "use client"
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, DollarSign, User, LogOut } from "lucide-react";
@@ -15,6 +15,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/context/language-context";
+import { useAuth } from "@/context/auth-context";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import React from "react";
 
 export default function ClientLayout({
   children,
@@ -22,7 +26,28 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const { t } = useLanguage();
+  const { user, loading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+  
+  if (loading || !user) {
+    return (
+        <div className="flex min-h-screen items-center justify-center">
+            <p>Loading...</p>
+        </div>
+    )
+  }
 
   const menuItems = [
     { href: "/client/dashboard", icon: LayoutDashboard, label: t('dashboard') },
@@ -54,17 +79,17 @@ export default function ClientLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="https://placehold.co/40x40.png" alt="Client" />
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarImage src={user.photoURL || "https://placehold.co/40x40.png"} alt="Client" />
+                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">John Doe</p>
+                    <p className="text-sm font-medium leading-none">{user.displayName || "Client User"}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      john.doe@example.com
+                      {user.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -77,8 +102,8 @@ export default function ClientLayout({
                     ))}
                     <DropdownMenuSeparator/>
                  </div>
-                <DropdownMenuItem asChild>
-                    <Link href="/"><LogOut className="mr-2 h-4 w-4" /> {t('logout')}</Link>
+                <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" /> {t('logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

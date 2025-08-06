@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useRouter } from "next/navigation"
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -45,18 +47,27 @@ export default function LoginPage() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof loginSchema>) {
-    console.log(values)
-    toast({
-      title: t('login_successful'),
-      description: t('redirecting_to_dashboard'),
-    })
-    // This is a mock login. In a real app, you'd check credentials
-    // and redirect based on user type (client or provider).
-    if (values.email.includes("provider")) {
-        router.push("/provider/dashboard")
-    } else {
-        router.push("/client/dashboard")
+  async function onSubmit(values: z.infer<typeof loginSchema>) {
+    try {
+        await signInWithEmailAndPassword(auth, values.email, values.password);
+        toast({
+            title: t('login_successful'),
+            description: t('redirecting_to_dashboard'),
+        });
+        // For this prototype, we don't know the user type yet.
+        // We will redirect to a generic dashboard or let the user choose.
+        // For now, let's just go to the provider dashboard as a default.
+        router.push("/provider/dashboard");
+    } catch (error: any) {
+        let errorMessage = "An unknown error occurred.";
+        if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
+            errorMessage = "Invalid email or password. Please try again.";
+        }
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: errorMessage,
+        })
     }
   }
 

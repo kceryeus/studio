@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useRouter } from "next/navigation"
+import { createUserWithEmailAndPassword } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -16,7 +18,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -52,13 +53,25 @@ export default function SignupPage() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof signupSchema>) {
-    console.log(values)
-    toast({
-      title: t('account_created'),
-      description: t('redirecting_to_login'),
-    })
-    router.push("/login")
+  async function onSubmit(values: z.infer<typeof signupSchema>) {
+    try {
+      await createUserWithEmailAndPassword(auth, values.email, values.password);
+      toast({
+        title: t('account_created'),
+        description: t('redirecting_to_login'),
+      })
+      router.push("/login")
+    } catch (error: any) {
+        let errorMessage = "An unknown error occurred.";
+        if (error.code === "auth/email-already-in-use") {
+            errorMessage = "This email address is already in use.";
+        }
+        toast({
+            variant: "destructive",
+            title: "Signup Failed",
+            description: errorMessage,
+        })
+    }
   }
 
   return (

@@ -1,7 +1,7 @@
 
 "use client"
 import Link from "next/link";
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -30,6 +30,11 @@ import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useLanguage } from "@/context/language-context";
+import { useAuth } from "@/context/auth-context";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import React from "react";
+
 
 export default function ProviderLayout({
   children,
@@ -37,7 +42,28 @@ export default function ProviderLayout({
   children: React.ReactNode;
 }) {
   const { t } = useLanguage();
+  const { user, loading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+  
+  if (loading || !user) {
+    return (
+        <div className="flex min-h-screen items-center justify-center">
+            <p>Loading...</p>
+        </div>
+    )
+  }
 
   const menuItems = [
     { href: "/provider/dashboard", icon: LayoutDashboard, label: t('dashboard') },
@@ -80,12 +106,12 @@ export default function ProviderLayout({
         <SidebarFooter>
           <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
             <Avatar className="h-8 w-8">
-              <AvatarImage src="https://placehold.co/40x40.png" alt="Provider" />
-              <AvatarFallback>SP</AvatarFallback>
+              <AvatarImage src={user.photoURL || "https://placehold.co/40x40.png" } alt="Provider" />
+              <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <span className="text-sm font-medium">Provider Inc.</span>
-              <span className="text-xs text-muted-foreground">provider@eco.co</span>
+              <span className="text-sm font-medium">{user.displayName || "Provider Inc."}</span>
+              <span className="text-xs text-muted-foreground">{user.email}</span>
             </div>
           </div>
           <div className="flex flex-col gap-1 mt-2">
@@ -95,11 +121,9 @@ export default function ProviderLayout({
                     <span>{t('home_page')}</span>
                 </Link>
              </Button>
-             <Button variant="ghost" size="sm" className="w-full justify-start text-red-500 hover:text-red-500 hover:bg-red-500/10" asChild>
-                <Link href="/">
-                    <LogOut />
-                    <span>{t('logout')}</span>
-                </Link>
+             <Button variant="ghost" size="sm" className="w-full justify-start text-red-500 hover:text-red-500 hover:bg-red-500/10" onClick={handleLogout}>
+                <LogOut />
+                <span>{t('logout')}</span>
              </Button>
           </div>
            <div className="flex items-center justify-center gap-2 mt-2 group-data-[collapsible=icon]:flex-col">
