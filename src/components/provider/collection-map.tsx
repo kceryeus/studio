@@ -72,7 +72,7 @@ class DirectionsControl implements IControl {
     this._map = map;
     this._map.getCanvas().style.cursor = '';
     
-    this._directions = new MaplibreDirections({
+    this._directions = new MaplibreDirections(this._map, {
       api: 'https://routing.openstreetmap.de/routed-car/route/v1',
       profile: 'driving',
       makePostRequest: true,
@@ -86,8 +86,6 @@ class DirectionsControl implements IControl {
     
     this._directions.on('route', this._onRouteChanged);
     
-    map.addControl(this._directions, 'top-left');
-    
     const div = document.createElement('div');
     return div;
   }
@@ -96,10 +94,8 @@ class DirectionsControl implements IControl {
     if (this._directions) {
       this._directions.off('route', this._onRouteChanged);
       if (this._map) {
-          const controlContainer = this._directions.container;
-          if (controlContainer && controlContainer.parentNode) {
-              controlContainer.parentNode.removeChild(controlContainer);
-          }
+          // The directions plugin automatically removes its own control container
+          this._map.removeControl(this._directions);
       }
     }
     this._map = null;
