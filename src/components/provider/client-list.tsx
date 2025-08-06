@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp, getDocs, DocumentData } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import type { Client, CollectionStatus, PaymentStatus, Route } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -76,13 +76,15 @@ const initialNewClientState = (): Partial<Client> => ({
 
 
 // Helper function to convert Firestore Timestamps to strings
-const clientFromDoc = (doc: DocumentData): Client => {
+const clientFromDoc = (doc: any): Client => {
     const data = doc.data();
     return {
         id: doc.id,
         ...data,
         nextCollectionDate: data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : '',
         nextPaymentDueDate: data.nextPaymentDueDate?.toDate ? format(data.nextPaymentDueDate.toDate(), 'yyyy-MM-dd') : '',
+        createdAt: data.createdAt?.toDate ? format(data.createdAt.toDate(), 'yyyy-MM-dd HH:mm') : 'N/A',
+        updatedAt: data.updatedAt?.toDate ? format(data.updatedAt.toDate(), 'yyyy-MM-dd HH:mm') : 'N/A',
         paymentHistory: data.paymentHistory?.map((p: any) => ({
             ...p,
             date: p.date?.toDate ? format(p.date.toDate(), 'yyyy-MM-dd') : p.date,
@@ -108,7 +110,10 @@ export default function ClientList() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    };
     setLoading(true);
     const q = query(collection(db, "clients"), where("providerId", "==", user.uid));
     
@@ -156,8 +161,8 @@ export default function ClientList() {
     const clientRef = doc(db, "clients", editingClient.id);
     try {
         await updateDoc(clientRef, {
-            collectionStatus: editingClient.collectionStatus,
-            // Add other editable fields here
+            ...editingClient,
+            updatedAt: serverTimestamp(),
         });
         toast({
             title: "Client Updated",
@@ -188,17 +193,18 @@ export default function ClientList() {
         ...initialNewClientState(),
         ...newClient,
         providerId: user.uid,
-        userId: null, // Always create as unlinked for now.
         balance: parseFloat(newClient.balance as any) || 0,
         nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) : Timestamp.fromDate(new Date()),
         nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) : Timestamp.fromDate(new Date()),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
     };
 
     try {
         await addDoc(collection(db, "clients"), clientToAdd);
         toast({
             title: "Client Added",
-            description: `Successfully added ${newClient.name}. If they have an account, they can claim this profile upon login.`,
+            description: `Successfully added ${newClient.name}.`,
         });
         setIsAddClientModalOpen(false);
         setNewClient(initialNewClientState());
@@ -321,6 +327,11 @@ export default function ClientList() {
                 <MapPin className="w-4 h-4" /> {selectedClient?.address}
             </div>
           </DialogHeader>
+          <div className="py-4">
+            <p>More editing fields can be added here.</p>
+            <p className="text-xs text-muted-foreground mt-2">Created: {selectedClient?.createdAt as string}</p>
+            <p className="text-xs text-muted-foreground">Last Updated: {selectedClient?.updatedAt as string}</p>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={handleCloseDialog}>{t('cancel')}</Button>
             <Button onClick={handleSaveChanges}>{t('save_changes')}</Button>
@@ -368,8 +379,8 @@ export default function ClientList() {
                     <div className="h-64 w-full rounded-md overflow-hidden relative">
                         <Map
                            initialViewState={{
-                                longitude: newClient.coordinates?.lng ?? 0,
-                                latitude: newClient.coordinates?.lat ?? 0,
+                                longitude: newClient.coordinates?.lng ?? 32.583,
+                                latitude: newClient.coordinates?.lat ?? -25.965,
                                 zoom: 12,
                             }}
                             mapStyle={MAPTILER_STYLE_URL}

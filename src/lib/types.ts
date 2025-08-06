@@ -38,6 +38,8 @@ export interface Client {
   routeId: string | null;
   providerId: string;
   userId: string | null; // ID of the user with 'client' role
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 export type VehicleStatus = 'in-use' | 'maintenance' | 'available';
