@@ -20,10 +20,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet"></link>
-        
-        {/* Added CDN links for maplibre-gl-directions */}
-        <link rel="stylesheet" href="https://unpkg.com/@maplibre/maplibre-gl-directions@0.6.0/dist/maplibre-gl-directions.css" />
-        <script src="https://unpkg.com/@maplibre/maplibre-gl-directions@0.6.0/dist/maplibre-gl-directions.js"></script>
       </head>
       <body className="font-body antialiased">
         <LanguageProvider>

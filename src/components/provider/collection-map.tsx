@@ -5,6 +5,9 @@ import * as React from "react";
 import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, MapLayerMouseEvent } from "react-map-gl/maplibre";
 import type { MapRef, IControl } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
+import '@maplibre/maplibre-gl-directions/dist/maplibre-gl-directions.css';
+import MaplibreDirections from '@maplibre/maplibre-gl-directions';
+
 
 import type { Client, GarbageStatus, Route } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -27,13 +30,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-
-// TypeScript declaration to expect MaplibreDirections on the window object
-declare global {
-  interface Window {
-    MaplibreDirections: any;
-  }
-}
 
 const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/streets-v2/style.json?key=xQ1eFBidgVoYA8BIrNEu`;
 
@@ -76,13 +72,7 @@ class DirectionsControl implements IControl {
     this._map = map;
     this._map.getCanvas().style.cursor = '';
     
-    if (!window.MaplibreDirections) {
-      console.error("MaplibreDirections is not available on the window object.");
-      const div = document.createElement('div');
-      return div;
-    }
-    
-    this._directions = new window.MaplibreDirections({
+    this._directions = new MaplibreDirections({
       api: 'https://routing.openstreetmap.de/routed-car/route/v1',
       profile: 'driving',
       makePostRequest: true,
@@ -98,7 +88,6 @@ class DirectionsControl implements IControl {
     
     map.addControl(this._directions, 'top-left');
     
-    // We return a dummy element because the plugin adds itself to the map.
     const div = document.createElement('div');
     return div;
   }
@@ -107,8 +96,6 @@ class DirectionsControl implements IControl {
     if (this._directions) {
       this._directions.off('route', this._onRouteChanged);
       if (this._map) {
-          // The plugin's remove method is not well documented/reliable
-          // so we manually remove the control element.
           const controlContainer = this._directions.container;
           if (controlContainer && controlContainer.parentNode) {
               controlContainer.parentNode.removeChild(controlContainer);
@@ -130,7 +117,6 @@ class DirectionsControl implements IControl {
   }
 }
 
-// This is the new component that will use the useControl hook
 function Directions({ onRouteChanged, route }: { onRouteChanged: (e: any) => void, route: Route | null }) {
   const directionsControl = React.useMemo(() => new DirectionsControl(onRouteChanged), [onRouteChanged]);
 
@@ -148,7 +134,7 @@ function Directions({ onRouteChanged, route }: { onRouteChanged: (e: any) => voi
     }
   }, [route, directionsControl]);
 
-  return null; // This component doesn't render anything itself
+  return null;
 }
 
 export default function CollectionMap({ 
@@ -280,4 +266,3 @@ export default function CollectionMap({
     </div>
   );
 }
-
