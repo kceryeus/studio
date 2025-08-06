@@ -7,7 +7,7 @@ import * as z from "zod"
 import { useRouter } from "next/navigation"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, query, where, getDocs, collection, writeBatch } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -69,6 +69,26 @@ export default function SignupPage() {
         email: values.email,
         accountType: values.accountType
       });
+
+      // If the new user is a client, check for an unclaimed profile with the same email
+      if (values.accountType === 'client') {
+          const q = query(collection(db, "clients"), where("email", "==", values.email), where("userId", "==", null));
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            const batch = writeBatch(db);
+            querySnapshot.forEach(clientDoc => {
+                // Link the unclaimed client profile to the new user ID
+                batch.update(clientDoc.ref, { userId: user.uid });
+            });
+            await batch.commit();
+             toast({
+                title: "Profile Claimed!",
+                description: "We've linked your account to your existing service profile.",
+            })
+          }
+      }
+
 
       toast({
         title: t('account_created'),

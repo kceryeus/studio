@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { MapPin, ShieldCheck, ShieldAlert, PlusCircle, Loader2 } from 'lucide-react';
+import { MapPin, ShieldCheck, ShieldAlert, PlusCircle, Loader2, Link, Link2Off } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -44,6 +44,15 @@ const PaymentBadge = ({ status }: { status: 'paid' | 'due' | 'overdue' }) => {
   return (
     <Badge variant={variant} className="capitalize">
       {t(status)}
+    </Badge>
+  );
+};
+
+const LinkedBadge = ({ isLinked }: { isLinked: boolean }) => {
+  return (
+    <Badge variant={isLinked ? 'secondary' : 'outline'} className="capitalize">
+        {isLinked ? <Link className="w-3 h-3 mr-1" /> : <Link2Off className="w-3 h-3 mr-1" />}
+        {isLinked ? 'Linked' : 'Unlinked'}
     </Badge>
   );
 };
@@ -181,11 +190,9 @@ export default function ClientList() {
         const userSnapshot = await getDocs(userQuery);
         if (!userSnapshot.empty) {
             userId = userSnapshot.docs[0].id;
-        } else {
-            toast({
-                variant: 'destructive',
-                title: 'Client User Not Found',
-                description: `No client account found for ${newClient.email}. The client can be added, but they won't be able to log in until they create an account with this email.`
+             toast({
+                title: 'Client Account Found',
+                description: `Linked this profile to the existing user account for ${newClient.email}.`
             })
         }
     }
@@ -194,7 +201,7 @@ export default function ClientList() {
         ...initialNewClientState,
         ...newClient,
         providerId: user.uid,
-        userId: userId,
+        userId: userId, // This will be null if no user is found, creating an "unclaimed" profile
         balance: parseFloat(newClient.balance as any) || 0,
         nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) : Timestamp.now(),
         nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) : Timestamp.now(),
@@ -274,7 +281,7 @@ export default function ClientList() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>{t('client')}</TableHead>
-                            <TableHead className="hidden md:table-cell">{t('address')}</TableHead>
+                            <TableHead>Account Status</TableHead>
                             <TableHead>{t('collection_status')}</TableHead>
                             <TableHead>{t('payment_status')}</TableHead>
                             <TableHead className="text-right">{t('balance')}</TableHead>
@@ -292,7 +299,9 @@ export default function ClientList() {
                             filteredClients.map(client => (
                                 <TableRow key={client.id} onClick={() => handleRowClick(client)} className="cursor-pointer">
                                     <TableCell className="font-medium">{client.name}</TableCell>
-                                    <TableCell className="hidden md:table-cell text-muted-foreground">{client.address}</TableCell>
+                                    <TableCell>
+                                        <LinkedBadge isLinked={!!client.userId} />
+                                    </TableCell>
                                     <TableCell>
                                         <StatusBadge status={client.collectionStatus} />
                                     </TableCell>
@@ -397,5 +406,3 @@ export default function ClientList() {
     </>
   );
 }
-
-    
