@@ -92,10 +92,7 @@ class DirectionsControl implements IControl {
     onRemove() {
         if (this._directions) {
             this._directions.off('route', this._onRouteChanged);
-            // The plugin should handle its own removal from map, but just in case
-            if (this._map && this._map.getControl('MaplibreDirections')) {
-                 this._map.removeControl(this._directions);
-            }
+            this._directions.clear();
         }
         if (this._controlContainer && this._controlContainer.parentNode) {
             this._controlContainer.parentNode.removeChild(this._controlContainer);
