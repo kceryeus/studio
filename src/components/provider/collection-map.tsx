@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, MapLayerMouseEvent } from "react-map-gl/maplibre";
-import type { MapRef, IControl } from "react-map-gl/maplibre";
+import type { MapRef } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
 import MaplibreDirections from '@maplibre/maplibre-gl-directions';
 
@@ -57,72 +57,53 @@ const GarbageStatusIcon = ({
   }
 };
 
-class DirectionsControl implements IControl {
-    _directions: MaplibreDirections | null = null;
-    _map: any;
-    _onRouteChanged: (e: any) => void;
+function Directions({ route, onRouteChanged }: { route: Route | null, onRouteChanged: (e: any) => void }) {
+  const mapRef = React.useContext(MapContext);
 
-    constructor(onRouteChanged: (e: any) => void) {
-        this._onRouteChanged = onRouteChanged;
-    }
-
-    onAdd(map: any) {
-        this._map = map;
-        this._directions = new MaplibreDirections(this._map, {
-            api: 'https://routing.openstreetmap.de/routed-car/route/v1',
-            profile: 'driving',
-            makePostRequest: true,
-            controls: {
-                instructions: true,
-                waypoints: true,
-                profileSwitcher: false,
-            },
-            interactive: true,
-        });
-        this._map.addControl(this._directions, 'top-left');
-        this._directions.on('route', this._onRouteChanged);
-        // The plugin adds its own container, so we return an empty one to satisfy the IControl interface
-        return document.createElement('div');
-    }
-
-    onRemove() {
-        if (this._directions) {
-            this._directions.onRemove(this._map);
-        }
-    }
-    
-    setWaypoints(waypoints: [number, number][]) {
-        if (this._directions) {
-            this._directions.setWaypoints(waypoints);
-        }
-    }
-}
-
-
-function Directions({ onRouteChanged, route }: { onRouteChanged: (e: any) => void, route: Route | null }) {
-  const directionsControlRef = React.useRef<DirectionsControl | null>(null);
-
-  useControl<DirectionsControl>(() => {
-    const directionsControl = new DirectionsControl(onRouteChanged);
-    directionsControlRef.current = directionsControl;
-    return directionsControl;
-  });
-  
   React.useEffect(() => {
-    const directionsControl = directionsControlRef.current;
-    if (directionsControl) {
-       if (route && route.path && route.path.length >= 2) {
-          const waypoints = route.path.map(p => [p.lng, p.lat]);
-          directionsControl.setWaypoints(waypoints);
-       } else if (!route) {
-          // Clears the route from the map
-          directionsControl.setWaypoints([]);
-       }
+    const map = mapRef?.getMap();
+    if (!map) return;
+
+    const directions = new MaplibreDirections(map, {
+        api: 'https://routing.openstreetmap.de/routed-car/route/v1',
+        profile: 'driving',
+        makePostRequest: true,
+        controls: {
+            instructions: true,
+            waypoints: true,
+            profileSwitcher: false,
+        },
+        interactive: true,
+    });
+    
+    map.addControl(directions, 'top-left');
+    directions.on('route', onRouteChanged);
+    
+    if (route && route.path && route.path.length >= 2) {
+      const waypoints = route.path.map(p => [p.lng, p.lat]);
+      directions.setWaypoints(waypoints);
+    } else if (!route) {
+      directions.setWaypoints([]);
     }
-  }, [route]);
+
+    return () => {
+      // The directions control has a bug where it might not be removable
+      // if it hasn't fully loaded, so we wrap in a try/catch
+      try {
+        if (map.hasControl(directions)) {
+          map.removeControl(directions);
+        }
+      } catch (e) {
+          console.error("Failed to remove directions control", e);
+      }
+    };
+  }, [mapRef, route, onRouteChanged]);
 
   return null;
 }
+
+
+const MapContext = React.createContext<MapRef | null>(null);
 
 
 export default function CollectionMap({ 
@@ -158,75 +139,76 @@ export default function CollectionMap({
   
   return (
     <div className="h-full w-full relative rounded-lg shadow-md overflow-hidden">
-      <Map
-        ref={mapRef}
-        initialViewState={{
-          longitude: 32.583,
-          latitude: -25.965,
-          zoom: 12,
-        }}
-        mapStyle={MAPTILER_STYLE_URL}
-        style={{width: '100%', height: '100%'}}
-        maxBounds={mozambiqueBounds}
-        mapLib={import('maplibre-gl')}
-        onLoad={() => setIsMapLoaded(true)}
-      >
-        <FullscreenControl position="top-right" />
-        <NavigationControl position="top-right" />
-        {isMapLoaded && <Directions onRouteChanged={onRouteChanged} route={route} />}
+      <MapContext.Provider value={mapRef.current}>
+        <Map
+          ref={mapRef}
+          initialViewState={{
+            longitude: 32.583,
+            latitude: -25.965,
+            zoom: 12,
+          }}
+          mapStyle={MAPTILER_STYLE_URL}
+          style={{width: '100%', height: '100%'}}
+          maxBounds={mozambiqueBounds}
+          mapLib={import('maplibre-gl')}
+          onLoad={() => setIsMapLoaded(true)}
+        >
+          <FullscreenControl position="top-right" />
+          <NavigationControl position="top-right" />
+          {isMapLoaded && <Directions onRouteChanged={onRouteChanged} route={route} />}
 
-        {clientData.map((client) => (
-          <Marker
-            key={client.id}
-            longitude={client.coordinates.lng}
-            latitude={client.coordinates.lat}
-            onClick={(e: MapLayerMouseEvent) => {
-                e.originalEvent.stopPropagation();
-                setPopupInfo(client);
-            }}
-            anchor="bottom"
-          >
-             <MapPin className="text-primary w-8 h-8 cursor-pointer drop-shadow-lg" />
-          </Marker>
-        ))}
+          {clientData.map((client) => (
+            <Marker
+              key={client.id}
+              longitude={client.coordinates.lng}
+              latitude={client.coordinates.lat}
+              onClick={(e: MapLayerMouseEvent) => {
+                  e.originalEvent.stopPropagation();
+                  setPopupInfo(client);
+              }}
+              anchor="bottom"
+            >
+              <MapPin className="text-primary w-8 h-8 cursor-pointer drop-shadow-lg" />
+            </Marker>
+          ))}
 
-        {popupInfo && (
-          <Popup
-            longitude={popupInfo.coordinates.lng}
-            latitude={popupInfo.coordinates.lat}
-            onClose={() => setPopupInfo(null)}
-            anchor="top"
-            closeButton={false}
-            className="w-64"
-          >
-            <div className="p-1 space-y-2">
-                <h3 className="font-bold text-base">{popupInfo.name}</h3>
-                <p className="text-xs text-muted-foreground">{popupInfo.address}</p>
-                <div className="flex items-center gap-2">
-                <span className="text-xs font-medium">{t('status')}:</span>
-                <Badge variant="outline" className="capitalize text-xs">
-                    <GarbageStatusIcon status={popupInfo.garbageStatus} className="w-3 h-3 mr-1" />
-                    {t(popupInfo.garbageStatus).replace("-", " ")}
-                </Badge>
-                </div>
-                <div className="pt-1">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => {
-                        setDialogClient(popupInfo);
-                        setPopupInfo(null);
-                    }}
-                >
-                    {t('update_status')}
-                </Button>
-                </div>
-            </div>
-          </Popup>
-        )}
-      </Map>
-
+          {popupInfo && (
+            <Popup
+              longitude={popupInfo.coordinates.lng}
+              latitude={popupInfo.coordinates.lat}
+              onClose={() => setPopupInfo(null)}
+              anchor="top"
+              closeButton={false}
+              className="w-64"
+            >
+              <div className="p-1 space-y-2">
+                  <h3 className="font-bold text-base">{popupInfo.name}</h3>
+                  <p className="text-xs text-muted-foreground">{popupInfo.address}</p>
+                  <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium">{t('status')}:</span>
+                  <Badge variant="outline" className="capitalize text-xs">
+                      <GarbageStatusIcon status={popupInfo.garbageStatus} className="w-3 h-3 mr-1" />
+                      {t(popupInfo.garbageStatus).replace("-", " ")}
+                  </Badge>
+                  </div>
+                  <div className="pt-1">
+                  <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => {
+                          setDialogClient(popupInfo);
+                          setPopupInfo(null);
+                      }}
+                  >
+                      {t('update_status')}
+                  </Button>
+                  </div>
+              </div>
+            </Popup>
+          )}
+        </Map>
+      </MapContext.Provider>
       <Dialog open={!!dialogClient} onOpenChange={() => setDialogClient(null)}>
         <DialogContent>
           <DialogHeader>
@@ -238,7 +220,7 @@ export default function CollectionMap({
 
           <div className="grid grid-cols-2 gap-2 mt-4">
             {(['collected', 'missed', 'not-out', 'pending'] as GarbageStatus[]).map(status => (
-                 <Button
+                  <Button
                     key={status}
                     size="sm"
                     variant="outline"
