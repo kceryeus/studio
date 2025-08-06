@@ -68,6 +68,7 @@ export default function ProviderLayout({
 
   if (!user) {
     // This state is temporary while the useEffect redirect kicks in.
+    // It's useful to prevent a flash of the login page content.
     return (
         <div className="flex min-h-screen items-center justify-center">
             <p>Redirecting to login...</p>
@@ -75,6 +76,7 @@ export default function ProviderLayout({
     );
   }
 
+  // Now that we're past the loading and !user checks, we can be sure userData is available.
   if (userData?.accountType !== 'provider') {
       return (
           <AccessDenied 
