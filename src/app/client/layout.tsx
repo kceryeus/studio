@@ -19,6 +19,7 @@ import { useAuth } from "@/context/auth-context";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import React from "react";
+import AccessDenied from "@/components/access-denied";
 
 export default function ClientLayout({
   children,
@@ -36,21 +37,37 @@ export default function ClientLayout({
   };
 
   React.useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.push('/login');
-      } else if (userData?.accountType !== 'client') {
-        router.push('/provider/dashboard');
-      }
+    if (!loading && !user) {
+      router.push('/login');
     }
-  }, [user, userData, loading, router]);
+  }, [user, loading, router]);
   
-  if (loading || !user || userData?.accountType !== 'client') {
+  if (loading) {
     return (
         <div className="flex min-h-screen items-center justify-center">
             <p>Loading...</p>
         </div>
     )
+  }
+
+  if (!user) {
+    // This state is temporary while the useEffect redirect kicks in.
+    return (
+        <div className="flex min-h-screen items-center justify-center">
+            <p>Redirecting to login...</p>
+        </div>
+    );
+  }
+
+  if (userData?.accountType !== 'client') {
+      return (
+          <AccessDenied 
+              title="Access Restricted"
+              message="This dashboard is for registered clients only. As a service provider, you should be on the provider dashboard."
+              linkHref="/provider/dashboard"
+              linkText="Go to Provider Dashboard"
+          />
+      );
   }
 
   const menuItems = [
