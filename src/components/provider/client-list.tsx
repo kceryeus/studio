@@ -184,30 +184,14 @@ export default function ClientList() {
         return;
     }
 
-
-    let userId: string | null = null;
-    if (newClient.email) {
-        try {
-            const userQuery = query(collection(db, "users"), where("email", "==", newClient.email), where("accountType", "==", "client"));
-            const userSnapshot = await getDocs(userQuery);
-            if (!userSnapshot.empty) {
-                userId = userSnapshot.docs[0].id;
-                toast({
-                    title: 'Client Account Found',
-                    description: `Linked this profile to the existing user account for ${newClient.email}.`
-                })
-            }
-        } catch (error) {
-            console.error("Error checking for existing user:", error);
-            // Don't block client creation if this check fails, just log it.
-        }
-    }
-
+    // The logic to auto-find and link a user is removed from here
+    // to prevent security rule violations. Linking will happen when the client signs up.
+    
     const clientToAdd = {
         ...initialNewClientState(),
         ...newClient,
         providerId: user.uid,
-        userId: userId, // This will be null if no user is found, creating an "unclaimed" profile
+        userId: null, // Always create as unlinked.
         balance: parseFloat(newClient.balance as any) || 0,
         nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) : Timestamp.fromDate(new Date()),
         nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) : Timestamp.fromDate(new Date()),
@@ -217,7 +201,7 @@ export default function ClientList() {
         await addDoc(collection(db, "clients"), clientToAdd);
         toast({
             title: "Client Added",
-            description: `Successfully added ${newClient.name}.`,
+            description: `Successfully added ${newClient.name}. If they have an account, they can claim this profile upon login.`,
         });
         setIsAddClientModalOpen(false);
         setNewClient(initialNewClientState());
