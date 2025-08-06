@@ -92,7 +92,7 @@ export default function ClientList() {
   const [editingClient, setEditingClient] = useState<Partial<Client> | null>(null);
   
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
-  const [newClient, setNewClient] = useState(initialNewClientState);
+  const [newClient, setNewClient] = useState<Partial<Client>>(initialNewClientState);
 
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -371,8 +371,8 @@ export default function ClientList() {
                     <div className="h-64 w-full rounded-md overflow-hidden relative">
                         <Map
                            initialViewState={{
-                                longitude: newClient.coordinates!.lng,
-                                latitude: newClient.coordinates!.lat,
+                                longitude: newClient.coordinates?.lng ?? 0,
+                                latitude: newClient.coordinates?.lat ?? 0,
                                 zoom: 12,
                             }}
                             mapStyle={MAPTILER_STYLE_URL}
@@ -381,7 +381,7 @@ export default function ClientList() {
                             onClick={onNewClientMapClick}
                             cursor="crosshair"
                         >
-                            {newClient.coordinates && <Marker longitude={newClient.coordinates!.lng} latitude={newClient.coordinates!.lat}>
+                            {newClient.coordinates && <Marker longitude={newClient.coordinates.lng} latitude={newClient.coordinates.lat}>
                                 <MapPin className="text-primary w-8 h-8 drop-shadow-lg" />
                             </Marker>}
                         </Map>
@@ -397,3 +397,5 @@ export default function ClientList() {
     </>
   );
 }
+
+    
