@@ -70,27 +70,13 @@ function Directions({ route, onRouteChanged }: { route: Route | null, onRouteCha
       },
       interactive: true,
     });
+
+    ctrl.on('route', onRouteChanged);
     return ctrl;
   }, {
     position: 'top-left'
   });
   
-  React.useEffect(() => {
-    if (!directions) return;
-    
-    const handleRouteEvent = (e: any) => {
-        if(e.route && e.route.length > 0) {
-            onRouteChanged(e);
-        }
-    };
-    
-    directions.on('route', handleRouteEvent);
-
-    return () => {
-      directions.off('route', handleRouteEvent);
-    };
-  }, [directions, onRouteChanged]);
-
   React.useEffect(() => {
     if (directions) {
        if (route && route.path && route.path.length >= 2) {
@@ -119,6 +105,7 @@ export default function CollectionMap({
   const [clientData, setClientData] = React.useState<Client[]>(clients);
   const [dialogClient, setDialogClient] = React.useState<Client | null>(null);
   const [popupInfo, setPopupInfo] = React.useState<Client | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = React.useState(false);
 
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -148,10 +135,11 @@ export default function CollectionMap({
           style={{width: '100%', height: '100%'}}
           maxBounds={mozambiqueBounds}
           mapLib={import('maplibre-gl')}
+          onLoad={() => setIsMapLoaded(true)}
         >
           <FullscreenControl position="top-right" />
           <NavigationControl position="top-right" />
-          <Directions onRouteChanged={onRouteChanged} route={route} />
+          {isMapLoaded && <Directions onRouteChanged={onRouteChanged} route={route} />}
 
           {clientData.map((client) => (
             <Marker
