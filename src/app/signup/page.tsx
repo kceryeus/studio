@@ -60,10 +60,9 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
-      // Update user profile
       await updateProfile(user, { displayName: values.fullName });
 
-      // Save user info to Firestore
+      // Create a document in the 'users' collection with the user's UID as the document ID
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         displayName: values.fullName,

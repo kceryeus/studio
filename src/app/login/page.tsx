@@ -54,7 +54,6 @@ export default function LoginPage() {
         const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
         const user = userCredential.user;
 
-        // Get user role from Firestore
         const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
 
@@ -71,7 +70,12 @@ export default function LoginPage() {
             }
         } else {
             // This case should ideally not happen if signup is done correctly
-            throw new Error("User data not found in database.");
+             toast({
+                variant: "destructive",
+                title: "Login Failed",
+                description: "User data not found. Please contact support.",
+            })
+            await auth.signOut();
         }
     } catch (error: any) {
         let errorMessage = "An unknown error occurred.";

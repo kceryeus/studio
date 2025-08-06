@@ -4,8 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp, getDocs, DocumentData } from 'firebase/firestore';
-import { DUMMY_ROUTES } from '@/lib/data';
-import type { Client, CollectionStatus, PaymentStatus, Transaction, Route } from '@/lib/types';
+import type { Client, CollectionStatus, PaymentStatus, Route } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { User, MapPin, CircleDollarSign, ShieldCheck, ShieldAlert, FileText, Settings, PlusCircle, Loader2 } from 'lucide-react';
+import { MapPin, ShieldCheck, ShieldAlert, PlusCircle, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +20,7 @@ import { Label } from '../ui/label';
 import Map, { Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useAuth } from '@/context/auth-context';
+import { DUMMY_ROUTES } from '@/lib/data';
 
 const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/streets-v2/style.json?key=xQ1eFBidgVoYA8BIrNEu`;
 
@@ -68,7 +68,7 @@ const initialNewClientState: Partial<Client> = {
 // Helper function to convert Firestore Timestamps to strings
 const clientFromDoc = (doc: DocumentData): Client => {
     const data = doc.data();
-    const client: Client = {
+    return {
         id: doc.id,
         ...data,
         nextCollectionDate: data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : '',
@@ -77,8 +77,7 @@ const clientFromDoc = (doc: DocumentData): Client => {
             ...p,
             date: p.date?.toDate ? format(p.date.toDate(), 'yyyy-MM-dd') : p.date,
         })) || []
-    };
-    return client;
+    } as Client;
 };
 
 export default function ClientList() {
@@ -130,8 +129,6 @@ export default function ClientList() {
     });
   }, [clients, searchTerm, collectionFilter, paymentFilter]);
 
-  // For now, transactions are not linked to clients in the DB
-  const clientTransactions: Transaction[] = [];
 
   const handleRowClick = (client: Client) => {
     setSelectedClient(client);
@@ -172,6 +169,11 @@ export default function ClientList() {
         toast({ variant: 'destructive', title: 'Not authenticated'});
         return;
     }
+    if (!newClient.name || !newClient.address) {
+        toast({ variant: 'destructive', title: 'Missing Information', description: 'Name and address are required.'});
+        return;
+    }
+
 
     let userId: string | null = null;
     if (newClient.email) {
@@ -189,12 +191,13 @@ export default function ClientList() {
     }
 
     const clientToAdd = {
+        ...initialNewClientState,
         ...newClient,
         providerId: user.uid,
         userId: userId,
         balance: parseFloat(newClient.balance as any) || 0,
-        nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) : null,
-        nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) : null,
+        nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) : Timestamp.now(),
+        nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) : Timestamp.now(),
     };
 
     try {
@@ -321,64 +324,6 @@ export default function ClientList() {
                 <MapPin className="w-4 h-4" /> {selectedClient?.address}
             </div>
           </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
-                <div className='space-y-4'>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2"><Settings className="w-5 h-5 text-primary" /> Account Status</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                           <div>
-                                <Label htmlFor="collection-status-select">Collection Status</Label>
-                                <Select 
-                                    value={editingClient?.collectionStatus}
-                                    onValueChange={(value) => setEditingClient(prev => prev ? {...prev, collectionStatus: value as CollectionStatus} : null)}
-                                >
-                                    <SelectTrigger id="collection-status-select">
-                                        <SelectValue placeholder="Select status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="active">Active</SelectItem>
-                                        <SelectItem value="suspended">Suspended</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                           </div>
-                        </CardContent>
-                    </Card>
-                </div>
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /> {t('transaction_history')}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>{t('date')}</TableHead>
-                                    <TableHead>{t('description')}</TableHead>
-                                    <TableHead className="text-right">{t('amount')}</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {clientTransactions.map(tx => (
-                                    <TableRow key={tx.id}>
-                                        <TableCell>{format(new Date(tx.date), 'dd MMM, yyyy')}</TableCell>
-                                        <TableCell>{tx.description}</TableCell>
-                                        <TableCell className="text-right font-medium text-green-600">{tx.amount.toFixed(2)} MT</TableCell>
-                                    </TableRow>
-                                ))}
-                                {clientTransactions.length === 0 && (
-                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
-                                            {t('no_transactions_found')}
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-            </div>
           <DialogFooter>
             <Button variant="outline" onClick={handleCloseDialog}>{t('cancel')}</Button>
             <Button onClick={handleSaveChanges}>{t('save_changes')}</Button>
@@ -436,9 +381,9 @@ export default function ClientList() {
                             onClick={onNewClientMapClick}
                             cursor="crosshair"
                         >
-                            <Marker longitude={newClient.coordinates!.lng} latitude={newClient.coordinates!.lat}>
+                            {newClient.coordinates && <Marker longitude={newClient.coordinates!.lng} latitude={newClient.coordinates!.lat}>
                                 <MapPin className="text-primary w-8 h-8 drop-shadow-lg" />
-                            </Marker>
+                            </Marker>}
                         </Map>
                     </div>
                 </div>

@@ -3,11 +3,26 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from "@/context/auth-context";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, DocumentData } from "firebase/firestore";
 import type { Client } from '@/lib/types';
 import DashboardCards from "@/components/client/dashboard-cards";
 import { useLanguage } from "@/context/language-context";
 import { Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
+
+const clientFromDoc = (doc: DocumentData): Client => {
+    const data = doc.data();
+    return {
+        id: doc.id,
+        ...data,
+        nextCollectionDate: data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : '',
+        nextPaymentDueDate: data.nextPaymentDueDate?.toDate ? format(data.nextPaymentDueDate.toDate(), 'yyyy-MM-dd') : '',
+        paymentHistory: data.paymentHistory?.map((p: any) => ({
+            ...p,
+            date: p.date?.toDate ? format(p.date.toDate(), 'yyyy-MM-dd') : p.date,
+        })) || []
+    } as Client;
+};
 
 export default function ClientDashboardPage() {
     const { t } = useLanguage();
@@ -28,7 +43,7 @@ export default function ClientDashboardPage() {
             const querySnapshot = await getDocs(q);
             if (!querySnapshot.empty) {
                 const doc = querySnapshot.docs[0];
-                setClientData({ id: doc.id, ...doc.data() } as Client);
+                setClientData(clientFromDoc(doc));
             }
             setLoading(false);
         };
