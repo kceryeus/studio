@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp, getDocs, DocumentData } from 'firebase/firestore';
 import { DUMMY_ROUTES } from '@/lib/data';
 import type { Client, CollectionStatus, PaymentStatus, Transaction, Route } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -65,6 +65,22 @@ const initialNewClientState: Partial<Client> = {
   userId: null,
 };
 
+// Helper function to convert Firestore Timestamps to strings
+const clientFromDoc = (doc: DocumentData): Client => {
+    const data = doc.data();
+    const client: Client = {
+        id: doc.id,
+        ...data,
+        nextCollectionDate: data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : '',
+        nextPaymentDueDate: data.nextPaymentDueDate?.toDate ? format(data.nextPaymentDueDate.toDate(), 'yyyy-MM-dd') : '',
+        paymentHistory: data.paymentHistory?.map((p: any) => ({
+            ...p,
+            date: p.date?.toDate ? format(p.date.toDate(), 'yyyy-MM-dd') : p.date,
+        })) || []
+    };
+    return client;
+};
+
 export default function ClientList() {
   const { user } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
@@ -88,10 +104,7 @@ export default function ClientList() {
     const q = query(collection(db, "clients"), where("providerId", "==", user.uid));
     
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const clientsData: Client[] = [];
-        querySnapshot.forEach((doc) => {
-            clientsData.push({ id: doc.id, ...doc.data() } as Client);
-        });
+        const clientsData: Client[] = querySnapshot.docs.map(doc => clientFromDoc(doc));
         setClients(clientsData);
         setLoading(false);
     }, (error) => {
@@ -180,8 +193,8 @@ export default function ClientList() {
         providerId: user.uid,
         userId: userId,
         balance: parseFloat(newClient.balance as any) || 0,
-        nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) as any : null,
-        nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) as any : null,
+        nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) : null,
+        nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) : null,
     };
 
     try {

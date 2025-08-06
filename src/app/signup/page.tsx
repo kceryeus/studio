@@ -80,6 +80,8 @@ export default function SignupPage() {
         let errorMessage = "An unknown error occurred.";
         if (error.code === "auth/email-already-in-use") {
             errorMessage = "This email address is already in use.";
+        } else if (error.code === 'permission-denied') {
+            errorMessage = "Database permission denied. Please check Firestore rules."
         }
         toast({
             variant: "destructive",
