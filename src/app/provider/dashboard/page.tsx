@@ -1,18 +1,45 @@
 
 "use client";
+import React, { useEffect, useState } from 'react';
 import ClientList from '@/components/provider/client-list';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Users, Truck, AlertCircle, Info } from 'lucide-react';
-import { DUMMY_CLIENTS } from '@/lib/data';
+import { Users, Truck, AlertCircle, Info, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/context/language-context';
+import { useAuth } from '@/context/auth-context';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { Client } from '@/lib/types';
 
 export default function ProviderDashboardPage() {
   const { t } = useLanguage();
-  const totalClients = DUMMY_CLIENTS.length;
-  const activeCollections = DUMMY_CLIENTS.filter(c => c.garbageStatus === 'out').length;
-  const issues = DUMMY_CLIENTS.filter(c => c.paymentStatus === 'overdue' || c.collectionStatus === 'suspended').length;
+  const { user } = useAuth();
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    
+    const q = query(collection(db, "clients"), where("providerId", "==", user.uid));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const clientsData: Client[] = [];
+        querySnapshot.forEach((doc) => {
+            clientsData.push({ id: doc.id, ...doc.data() } as Client);
+        });
+        setClients(clientsData);
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching clients for dashboard: ", error);
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const totalClients = clients.length;
+  const activeCollections = clients.filter(c => c.garbageStatus === 'out').length;
+  const issues = clients.filter(c => c.paymentStatus === 'overdue' || c.collectionStatus === 'suspended').length;
   
   return (
     <div className="space-y-6">
@@ -39,7 +66,7 @@ export default function ProviderDashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalClients}</div>
+            {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <div className="text-2xl font-bold">{totalClients}</div>}
           </CardContent>
         </Card>
         <Card>
@@ -48,7 +75,7 @@ export default function ProviderDashboardPage() {
             <Truck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeCollections}</div>
+            {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <div className="text-2xl font-bold">{activeCollections}</div>}
           </CardContent>
         </Card>
         <Card>
@@ -57,7 +84,7 @@ export default function ProviderDashboardPage() {
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{issues}</div>
+             {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <div className="text-2xl font-bold text-destructive">{issues}</div>}
           </CardContent>
         </Card>
       </div>

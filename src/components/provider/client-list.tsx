@@ -1,8 +1,10 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
-import { DUMMY_CLIENTS, DUMMY_TRANSACTIONS, DUMMY_ROUTES } from '@/lib/data';
+import { useState, useMemo, useEffect } from 'react';
+import { db } from '@/lib/firebase';
+import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp, getDocs } from 'firebase/firestore';
+import { DUMMY_ROUTES } from '@/lib/data';
 import type { Client, CollectionStatus, PaymentStatus, Transaction, Route } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,13 +13,14 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { User, MapPin, CircleDollarSign, ShieldCheck, ShieldAlert, FileText, Settings, PlusCircle } from 'lucide-react';
+import { User, MapPin, CircleDollarSign, ShieldCheck, ShieldAlert, FileText, Settings, PlusCircle, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '../ui/label';
 import Map, { Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { useAuth } from '@/context/auth-context';
 
 const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/streets-v2/style.json?key=xQ1eFBidgVoYA8BIrNEu`;
 
@@ -45,25 +48,27 @@ const PaymentBadge = ({ status }: { status: 'paid' | 'due' | 'overdue' }) => {
   );
 };
 
-const initialNewClientState = {
-  id: '',
+const initialNewClientState: Partial<Client> = {
   name: '',
   address: '',
+  email: '',
   coordinates: { lat: -25.965, lng: 32.583 },
-  collectionStatus: 'active' as CollectionStatus,
-  paymentStatus: 'due' as PaymentStatus,
-  garbageStatus: 'pending' as any,
+  collectionStatus: 'active',
+  paymentStatus: 'due',
+  garbageStatus: 'pending',
   nextCollectionDate: '',
   nextPaymentDueDate: '',
   paymentHistory: [],
   balance: 0,
   sharesLocation: true,
-  routeId: null
+  routeId: null,
+  userId: null,
 };
 
-
 export default function ClientList() {
-  const [clients, setClients] = useState<Client[]>(DUMMY_CLIENTS);
+  const { user } = useAuth();
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [collectionFilter, setCollectionFilter] = useState<CollectionStatus | 'all'>('all');
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | 'all'>('all');
@@ -72,10 +77,36 @@ export default function ClientList() {
   const [editingClient, setEditingClient] = useState<Partial<Client> | null>(null);
   
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
-  const [newClient, setNewClient] = useState<Client>(initialNewClientState);
+  const [newClient, setNewClient] = useState(initialNewClientState);
 
   const { t } = useLanguage();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!user) return;
+    setLoading(true);
+    const q = query(collection(db, "clients"), where("providerId", "==", user.uid));
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const clientsData: Client[] = [];
+        querySnapshot.forEach((doc) => {
+            clientsData.push({ id: doc.id, ...doc.data() } as Client);
+        });
+        setClients(clientsData);
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching clients: ", error);
+        toast({
+            variant: "destructive",
+            title: "Failed to fetch clients",
+            description: "Please check your connection and Firestore security rules."
+        })
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, toast]);
+
 
   const filteredClients = useMemo(() => {
     return clients.filter(client => {
@@ -86,10 +117,8 @@ export default function ClientList() {
     });
   }, [clients, searchTerm, collectionFilter, paymentFilter]);
 
-  const clientTransactions = useMemo(() => {
-    if (!selectedClient) return [];
-    return DUMMY_TRANSACTIONS.filter(tx => tx.description.includes(selectedClient.id));
-  }, [selectedClient]);
+  // For now, transactions are not linked to clients in the DB
+  const clientTransactions: Transaction[] = [];
 
   const handleRowClick = (client: Client) => {
     setSelectedClient(client);
@@ -101,33 +130,76 @@ export default function ClientList() {
     setEditingClient(null);
   }
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (!editingClient || !editingClient.id) return;
-
-    setClients(prevClients => 
-      prevClients.map(c => c.id === editingClient.id ? { ...c, ...editingClient } as Client : c)
-    );
     
-    toast({
-        title: "Client Updated",
-        description: `Successfully updated ${editingClient.name}'s details.`,
-    });
-
-    handleCloseDialog();
+    const clientRef = doc(db, "clients", editingClient.id);
+    try {
+        await updateDoc(clientRef, {
+            collectionStatus: editingClient.collectionStatus,
+            // Add other editable fields here
+        });
+        toast({
+            title: "Client Updated",
+            description: `Successfully updated ${editingClient.name}'s details.`,
+        });
+        handleCloseDialog();
+    } catch (error) {
+        console.error("Error updating client: ", error);
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not update client details."
+        });
+    }
   }
 
-  const handleAddClient = () => {
+  const handleAddClient = async () => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Not authenticated'});
+        return;
+    }
+
+    let userId: string | null = null;
+    if (newClient.email) {
+        const userQuery = query(collection(db, "users"), where("email", "==", newClient.email), where("accountType", "==", "client"));
+        const userSnapshot = await getDocs(userQuery);
+        if (!userSnapshot.empty) {
+            userId = userSnapshot.docs[0].id;
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Client User Not Found',
+                description: `No client account found for ${newClient.email}. The client can be added, but they won't be able to log in until they create an account with this email.`
+            })
+        }
+    }
+
     const clientToAdd = {
         ...newClient,
-        id: `CLI${Date.now()}`,
+        providerId: user.uid,
+        userId: userId,
+        balance: parseFloat(newClient.balance as any) || 0,
+        nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) as any : null,
+        nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) as any : null,
     };
-    setClients(prev => [...prev, clientToAdd]);
-    toast({
-        title: "Client Added",
-        description: `Successfully added ${clientToAdd.name}.`,
-    });
-    setIsAddClientModalOpen(false);
-    setNewClient(initialNewClientState);
+
+    try {
+        await addDoc(collection(db, "clients"), clientToAdd);
+        toast({
+            title: "Client Added",
+            description: `Successfully added ${newClient.name}.`,
+        });
+        setIsAddClientModalOpen(false);
+        setNewClient(initialNewClientState);
+    } catch (error) {
+        console.error("Error adding client: ", error);
+        toast({
+            variant: "destructive",
+            title: "Failed to Add Client",
+            description: "Please check your data and try again."
+        })
+    }
   };
 
   const onNewClientMapClick = (e: any) => {
@@ -193,20 +265,28 @@ export default function ClientList() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredClients.map(client => (
-                            <TableRow key={client.id} onClick={() => handleRowClick(client)} className="cursor-pointer">
-                                <TableCell className="font-medium">{client.name}</TableCell>
-                                <TableCell className="hidden md:table-cell text-muted-foreground">{client.address}</TableCell>
-                                <TableCell>
-                                    <StatusBadge status={client.collectionStatus} />
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center py-12">
+                                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+                                    <p className="mt-2 text-muted-foreground">Loading clients...</p>
                                 </TableCell>
-                                <TableCell>
-                                    <PaymentBadge status={client.paymentStatus} />
-                                </TableCell>
-                                <TableCell className="text-right font-semibold">{client.balance.toFixed(2)} MT</TableCell>
                             </TableRow>
-                        ))}
-                         {filteredClients.length === 0 && (
+                        ) : filteredClients.length > 0 ? (
+                            filteredClients.map(client => (
+                                <TableRow key={client.id} onClick={() => handleRowClick(client)} className="cursor-pointer">
+                                    <TableCell className="font-medium">{client.name}</TableCell>
+                                    <TableCell className="hidden md:table-cell text-muted-foreground">{client.address}</TableCell>
+                                    <TableCell>
+                                        <StatusBadge status={client.collectionStatus} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <PaymentBadge status={client.paymentStatus} />
+                                    </TableCell>
+                                    <TableCell className="text-right font-semibold">{client.balance.toFixed(2)} MT</TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
                                     {t('no_clients_match_filters')}
@@ -310,6 +390,10 @@ export default function ClientList() {
                         <Label htmlFor="new-client-address">Address</Label>
                         <Input id="new-client-address" value={newClient.address} onChange={e => setNewClient({...newClient, address: e.target.value})} />
                     </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="new-client-email">Client's Login Email (Optional)</Label>
+                        <Input id="new-client-email" type="email" placeholder="client@example.com" value={newClient.email || ''} onChange={e => setNewClient({...newClient, email: e.target.value})} />
+                    </div>
                     <div className="space-y-2">
                         <Label htmlFor="new-client-route">Assign to Route</Label>
                         <Select value={newClient.routeId || ''} onValueChange={value => setNewClient({...newClient, routeId: value})}>
@@ -329,8 +413,8 @@ export default function ClientList() {
                     <div className="h-64 w-full rounded-md overflow-hidden relative">
                         <Map
                            initialViewState={{
-                                longitude: newClient.coordinates.lng,
-                                latitude: newClient.coordinates.lat,
+                                longitude: newClient.coordinates!.lng,
+                                latitude: newClient.coordinates!.lat,
                                 zoom: 12,
                             }}
                             mapStyle={MAPTILER_STYLE_URL}
@@ -339,7 +423,7 @@ export default function ClientList() {
                             onClick={onNewClientMapClick}
                             cursor="crosshair"
                         >
-                            <Marker longitude={newClient.coordinates.lng} latitude={newClient.coordinates.lat}>
+                            <Marker longitude={newClient.coordinates!.lng} latitude={newClient.coordinates!.lat}>
                                 <MapPin className="text-primary w-8 h-8 drop-shadow-lg" />
                             </Marker>
                         </Map>

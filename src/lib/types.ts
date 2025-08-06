@@ -21,10 +21,11 @@ export type Route = {
     geometry?: any; // To store the full GeoJSON geometry from the directions API
 };
 
-export type Client = {
+export interface Client {
   id: string;
   name: string;
   address: string;
+  email?: string | null;
   coordinates: { lat: number; lng: number };
   collectionStatus: CollectionStatus;
   paymentStatus: PaymentStatus;
@@ -35,7 +36,9 @@ export type Client = {
   balance: number;
   sharesLocation: boolean;
   routeId: string | null;
-};
+  providerId: string;
+  userId: string | null; // ID of the user with 'client' role
+}
 
 export type VehicleStatus = 'in-use' | 'maintenance' | 'available';
 export type FuelType = 'Diesel' | 'Gasoline';

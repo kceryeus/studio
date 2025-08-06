@@ -1,14 +1,38 @@
+
 "use client";
-import * as React from 'react';
+import React, { useEffect, useState } from 'react';
 import CollectionMap from "@/components/provider/collection-map";
-import { DUMMY_CLIENTS } from "@/lib/data";
 import { useLanguage } from "@/context/language-context";
 import type { Client } from '@/lib/types';
+import { useAuth } from '@/context/auth-context';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Loader2 } from 'lucide-react';
 
 export default function ProviderMapPage() {
   const { t } = useLanguage();
-  
-  const allVisibleClients = DUMMY_CLIENTS.filter(c => c.sharesLocation);
+  const { user } = useAuth();
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(collection(db, "clients"), where("providerId", "==", user.uid));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const clientsData: Client[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.sharesLocation) {
+                 clientsData.push({ id: doc.id, ...data } as Client);
+            }
+        });
+        setClients(clientsData);
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] overflow-hidden">
@@ -17,9 +41,13 @@ export default function ProviderMapPage() {
             <p className="text-muted-foreground">{t('map_subtitle')}</p>
         </div>
         <div className="flex-grow relative h-full w-full">
-            <CollectionMap
-                clients={allVisibleClients}
-            />
+            {loading ? (
+                <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                </div>
+            ) : (
+                <CollectionMap clients={clients} />
+            )}
         </div>
     </div>
   );

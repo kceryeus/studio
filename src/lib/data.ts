@@ -1,5 +1,5 @@
 
-import type { Client, Route, DayOfWeek, Vehicle, Worker, TimesheetEntry, Assignment, Transaction, FuelLogEntry, MaintenanceLogEntry } from './types';
+import type { Route, DayOfWeek, Vehicle, Worker, TimesheetEntry, Assignment, Transaction, FuelLogEntry, MaintenanceLogEntry } from './types';
 
 export const DUMMY_ROUTES: Route[] = [
     { 
@@ -21,108 +21,6 @@ export const DUMMY_ROUTES: Route[] = [
         ]
     },
     { id: 'ROUTE03', name: 'Parque Industrial', weekdays: ['Wednesday'] },
-];
-
-export const DUMMY_CLIENTS: Client[] = [
-  {
-    id: 'CLI001',
-    name: 'Julio Silva',
-    address: 'Av. Julius Nyerere, 123, Maputo',
-    coordinates: { lat: -25.9613, lng: 32.5895 },
-    collectionStatus: 'active',
-    paymentStatus: 'paid',
-    garbageStatus: 'collected',
-    nextCollectionDate: '2024-07-28',
-    nextPaymentDueDate: '2024-08-16',
-    balance: 0,
-    paymentHistory: [
-      { id: 'PAY001', date: '2024-06-22', amount: 1500, status: 'paid' },
-      { id: 'PAY002', date: '2024-05-23', amount: 1500, status: 'paid' },
-    ],
-    sharesLocation: true,
-    routeId: 'ROUTE01',
-  },
-  {
-    id: 'CLI002',
-    name: 'Mariana Costa',
-    address: 'Rua de Bagamoyo, 456, Maputo',
-    coordinates: { lat: -25.9559, lng: 32.5727 },
-    collectionStatus: 'active',
-    paymentStatus: 'due',
-    garbageStatus: 'out',
-    nextCollectionDate: '2024-07-24',
-    nextPaymentDueDate: '2024-07-27',
-    balance: 1500,
-    paymentHistory: [
-      { id: 'PAY003', date: '2024-06-17', amount: 1500, status: 'paid' },
-    ],
-    sharesLocation: true,
-    routeId: 'ROUTE01',
-  },
-  {
-    id: 'CLI003',
-    name: 'Carlos Pereira',
-    address: 'Av. 24 de Julho, 789, Maputo',
-    coordinates: { lat: -25.9754, lng: 32.5768 },
-    collectionStatus: 'active',
-    paymentStatus: 'overdue',
-    garbageStatus: 'pending',
-    nextCollectionDate: '2024-07-24',
-    nextPaymentDueDate: '2024-07-12',
-    balance: 3000,
-    paymentHistory: [],
-    sharesLocation: true,
-    routeId: 'ROUTE02',
-  },
-  {
-    id: 'CLI004',
-    name: 'Ana Rodrigues',
-    address: 'Av. da Marginal, 1011, Maputo',
-    coordinates: { lat: -25.9844, lng: 32.5931 },
-    collectionStatus: 'suspended',
-    paymentStatus: 'overdue',
-    garbageStatus: 'missed',
-    nextCollectionDate: 'N/A',
-    nextPaymentDueDate: '2024-06-12',
-    balance: 4500,
-    paymentHistory: [],
-    sharesLocation: true,
-    routeId: 'ROUTE02',
-  },
-  {
-    id: 'CLI005',
-    name: 'Paulo Santos',
-    address: 'Av. Vladimir Lenine, 212, Maputo',
-    coordinates: { lat: -25.9682, lng: 32.5834 },
-    collectionStatus: 'active',
-    paymentStatus: 'paid',
-    garbageStatus: 'not-out',
-    nextCollectionDate: '2024-07-26',
-    nextPaymentDueDate: '2024-08-11',
-    balance: 0,
-    paymentHistory: [
-      { id: 'PAY004', date: '2024-06-24', amount: 1500, status: 'paid' },
-    ],
-    sharesLocation: true,
-    routeId: 'ROUTE03',
-  },
-  {
-    id: 'CLI006',
-    name: 'Sofia Lopes',
-    address: 'Rua da Argélia, 333, Maputo',
-    coordinates: { lat: -25.9598, lng: 32.5936 },
-    collectionStatus: 'active',
-    paymentStatus: 'paid',
-    garbageStatus: 'collected',
-    nextCollectionDate: '2024-07-27',
-    nextPaymentDueDate: '2024-08-09',
-    balance: 0,
-    paymentHistory: [
-      { id: 'PAY005', date: '2024-06-27', amount: 1500, status: 'paid' },
-    ],
-    sharesLocation: false,
-    routeId: 'ROUTE03',
-  },
 ];
 
 const VEH01_Fuel: FuelLogEntry[] = [
