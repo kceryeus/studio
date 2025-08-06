@@ -71,7 +71,7 @@ class DirectionsControl implements IControl {
         this._map = map;
         this._controlContainer = document.createElement('div');
         this._controlContainer.className = 'maplibregl-ctrl';
-
+        
         this._directions = new MaplibreDirections(this._map, {
             api: 'https://routing.openstreetmap.de/routed-car/route/v1',
             profile: 'driving',
@@ -92,9 +92,13 @@ class DirectionsControl implements IControl {
     onRemove() {
         if (this._directions) {
             this._directions.off('route', this._onRouteChanged);
-            if (this._map && this._map.hasControl(this._directions)) {
-                this._map.removeControl(this._directions);
+            // The plugin should handle its own removal from map, but just in case
+            if (this._map && this._map.getControl('MaplibreDirections')) {
+                 this._map.removeControl(this._directions);
             }
+        }
+        if (this._controlContainer && this._controlContainer.parentNode) {
+            this._controlContainer.parentNode.removeChild(this._controlContainer);
         }
         this._map = null;
         this._directions = null;
@@ -110,6 +114,7 @@ class DirectionsControl implements IControl {
         return this._directions;
     }
 }
+
 
 function Directions({ onRouteChanged, route }: { onRouteChanged: (e: any) => void, route: Route | null }) {
   const directionsControlRef = React.useRef<DirectionsControl | null>(null);
@@ -127,6 +132,7 @@ function Directions({ onRouteChanged, route }: { onRouteChanged: (e: any) => voi
           const waypoints = route.path.map(p => [p.lng, p.lat]);
           directionsControl.setWaypoints(waypoints);
        } else if (!route) {
+          // Clears the route from the map
           directionsControl.setWaypoints([]);
        }
     }
@@ -148,6 +154,7 @@ export default function CollectionMap({
   const [clientData, setClientData] = React.useState<Client[]>(clients);
   const [dialogClient, setDialogClient] = React.useState<Client | null>(null);
   const [popupInfo, setPopupInfo] = React.useState<Client | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = React.useState(false);
   const mapRef = React.useRef<MapRef>(null);
 
   const { toast } = useToast();
@@ -179,10 +186,11 @@ export default function CollectionMap({
         style={{width: '100%', height: '100%'}}
         maxBounds={mozambiqueBounds}
         mapLib={import('maplibre-gl')}
+        onLoad={() => setIsMapLoaded(true)}
       >
         <FullscreenControl position="top-right" />
         <NavigationControl position="top-right" />
-        <Directions onRouteChanged={onRouteChanged} route={route} />
+        {isMapLoaded && <Directions onRouteChanged={onRouteChanged} route={route} />}
 
         {clientData.map((client) => (
           <Marker
