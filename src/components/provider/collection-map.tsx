@@ -86,6 +86,7 @@ class DirectionsControl implements IControl {
     
     this._directions.on('route', this._onRouteChanged);
     
+    // The plugin adds its own DOM element, so we return an empty one.
     const div = document.createElement('div');
     return div;
   }
@@ -93,10 +94,9 @@ class DirectionsControl implements IControl {
   onRemove() {
     if (this._directions) {
       this._directions.off('route', this._onRouteChanged);
-      if (this._map) {
-          // The directions plugin automatically removes its own control container
+       if (this._map && this._map.hasControl(this._directions)) {
           this._map.removeControl(this._directions);
-      }
+       }
     }
     this._map = null;
     this._directions = null;
@@ -123,9 +123,9 @@ function Directions({ onRouteChanged, route }: { onRouteChanged: (e: any) => voi
     if (directions) {
        if (route && route.path && route.path.length >= 2) {
           const waypoints = route.path.map(p => [p.lng, p.lat]);
-          directionsControl.setWaypoints(waypoints);
+          directions.setWaypoints(waypoints);
        } else if (!route) {
-          directionsControl.setWaypoints([]);
+          directions.setWaypoints([]);
        }
     }
   }, [route, directionsControl]);
