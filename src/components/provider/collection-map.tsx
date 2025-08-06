@@ -2,10 +2,9 @@
 "use client";
 
 import * as React from "react";
-import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, MapLayerMouseEvent, useMap } from "react-map-gl/maplibre";
+import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, MapLayerMouseEvent } from "react-map-gl/maplibre";
 import type { MapRef, IControl } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
-import '@maplibre/maplibre-gl-directions/dist/maplibre-gl-directions.css';
 import MaplibreDirections from '@maplibre/maplibre-gl-directions';
 
 import type { Client, GarbageStatus, Route } from "@/lib/types";
@@ -73,7 +72,7 @@ class DirectionsControl implements IControl {
         this._controlContainer = document.createElement('div');
         this._controlContainer.className = 'maplibregl-ctrl';
 
-        this._directions = new MaplibreDirections({
+        this._directions = new MaplibreDirections(this._map, {
             api: 'https://routing.openstreetmap.de/routed-car/route/v1',
             profile: 'driving',
             makePostRequest: true,
@@ -85,7 +84,6 @@ class DirectionsControl implements IControl {
             interactive: true,
         });
         
-        this._map.addControl(this._directions, 'top-left');
         this._directions.on('route', this._onRouteChanged);
         
         return this._controlContainer;
@@ -116,11 +114,11 @@ class DirectionsControl implements IControl {
 function Directions({ onRouteChanged, route }: { onRouteChanged: (e: any) => void, route: Route | null }) {
   const directionsControlRef = React.useRef<DirectionsControl | null>(null);
 
-  useControl(() => {
+  useControl<DirectionsControl>(() => {
     const directionsControl = new DirectionsControl(onRouteChanged);
     directionsControlRef.current = directionsControl;
     return directionsControl;
-  });
+  }, { position: 'top-left' });
   
   React.useEffect(() => {
     const directionsControl = directionsControlRef.current;
