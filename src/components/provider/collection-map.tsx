@@ -2,8 +2,8 @@
 "use client";
 
 import * as React from "react";
-import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl, MapLayerMouseEvent } from "react-map-gl/maplibre";
-import type { MapRef } from "react-map-gl/maplibre";
+import Map, { Marker, Popup, NavigationControl, FullscreenControl, useControl } from "react-map-gl/maplibre";
+import type { MapRef, IControl } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
 import MaplibreDirections from '@maplibre/maplibre-gl-directions';
 
@@ -59,20 +59,40 @@ const GarbageStatusIcon = ({
 
 function Directions({ route, onRouteChanged }: { route: Route | null, onRouteChanged: (e: any) => void }) {
   const directions = useControl<MaplibreDirections>(() => {
-    const ctrl = new MaplibreDirections({
-      api: 'https://routing.openstreetmap.de/routed-car/route/v1',
-      profile: 'driving',
-      makePostRequest: true,
-      controls: {
-        instructions: true,
-        waypoints: true,
-        profileSwitcher: false,
-      },
-      interactive: true,
-    });
+    class DirectionsControl implements IControl {
+      _directions: MaplibreDirections | null = null;
+      _map: any = null;
+      _onRouteChanged: (e: any) => void;
 
-    ctrl.on('route', onRouteChanged);
-    return ctrl;
+      constructor(onRouteChanged: (e: any) => void) {
+        this._onRouteChanged = onRouteChanged;
+      }
+      
+      onAdd(map: any) {
+        this._map = map;
+        this._directions = new MaplibreDirections(this._map, {
+            api: 'https://routing.openstreetmap.de/routed-car/route/v1',
+            profile: 'driving',
+            makePostRequest: true,
+            controls: {
+                instructions: true,
+                waypoints: true,
+                profileSwitcher: false,
+            },
+            interactive: true,
+        });
+        this._directions.on('route', this._onRouteChanged);
+        return this._directions.onAdd(map);
+      }
+
+      onRemove() {
+        if (this._directions) {
+            this._directions.off('route', this._onRouteChanged);
+            this._directions.onRemove();
+        }
+      }
+    }
+    return new DirectionsControl(onRouteChanged) as any;
   }, {
     position: 'top-left'
   });
@@ -146,7 +166,7 @@ export default function CollectionMap({
               key={client.id}
               longitude={client.coordinates.lng}
               latitude={client.coordinates.lat}
-              onClick={(e: MapLayerMouseEvent) => {
+              onClick={(e) => {
                   e.originalEvent.stopPropagation();
                   setPopupInfo(client);
               }}
