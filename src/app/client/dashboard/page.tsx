@@ -40,12 +40,17 @@ export default function ClientDashboardPage() {
         const fetchClientData = async () => {
             setLoading(true);
             const q = query(collection(db, "clients"), where("userId", "==", user.uid));
-            const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-                const doc = querySnapshot.docs[0];
-                setClientData(clientFromDoc(doc));
+            try {
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const doc = querySnapshot.docs[0];
+                    setClientData(clientFromDoc(doc));
+                }
+            } catch (error) {
+                console.error("Error fetching client data:", error);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
 
         fetchClientData();
