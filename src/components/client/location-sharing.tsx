@@ -8,18 +8,36 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { MapPin } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
+import type { Client } from '@/lib/types';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
-export default function LocationSharing({ initialStatus }: { initialStatus: boolean }) {
+export default function LocationSharing({ initialStatus, client }: { initialStatus: boolean, client: Client }) {
   const [isSharing, setIsSharing] = useState(initialStatus);
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const handleToggle = (checked: boolean) => {
+  const handleToggle = async (checked: boolean) => {
     setIsSharing(checked);
-    toast({
-      title: t('location_preference_updated'),
-      description: checked ? t('location_sharing_on_toast') : t('location_sharing_off_toast'),
-    });
+
+     try {
+        const clientRef = doc(db, "clients", client.id);
+        await updateDoc(clientRef, {
+            sharesLocation: checked
+        });
+        toast({
+            title: t('location_preference_updated'),
+            description: checked ? t('location_sharing_on_toast') : t('location_sharing_off_toast'),
+        });
+    } catch (error) {
+        console.error("Error updating location sharing: ", error);
+        setIsSharing(!checked); // Revert UI on error
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not update your location preference. Please try again."
+        });
+    }
   };
 
   return (

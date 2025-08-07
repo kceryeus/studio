@@ -6,21 +6,38 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Trash2, CheckCircle, BellOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { GarbageStatus } from '@/lib/types';
+import type { Client, GarbageStatus } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
-export default function GarbageStatusToggle({ initialStatus }: { initialStatus: GarbageStatus }) {
+export default function GarbageStatusToggle({ initialStatus, client }: { initialStatus: GarbageStatus, client: Client }) {
   const [hasGarbage, setHasGarbage] = useState(initialStatus === 'out');
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const handleToggle = () => {
+  const handleToggle = async () => {
     const newStatus = !hasGarbage;
     setHasGarbage(newStatus);
-    toast({
-      title: t('status_updated'),
-      description: newStatus ? t('garbage_status_yes_toast') : t('garbage_status_no_toast'),
-    });
+    
+    try {
+        const clientRef = doc(db, "clients", client.id);
+        await updateDoc(clientRef, {
+            garbageStatus: newStatus ? 'out' : 'not-out'
+        });
+        toast({
+          title: t('status_updated'),
+          description: newStatus ? t('garbage_status_yes_toast') : t('garbage_status_no_toast'),
+        });
+    } catch (error) {
+        console.error("Error updating garbage status: ", error);
+        setHasGarbage(!newStatus); // Revert UI on error
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not update your garbage status. Please try again."
+        });
+    }
   };
 
   return (

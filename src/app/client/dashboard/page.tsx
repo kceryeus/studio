@@ -9,14 +9,15 @@ import DashboardCards from "@/components/client/dashboard-cards";
 import { useLanguage } from "@/context/language-context";
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const clientFromDoc = (doc: DocumentData): Client => {
     const data = doc.data();
     return {
         id: doc.id,
         ...data,
-        nextCollectionDate: data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : (data.nextCollectionDate || ''),
-        nextPaymentDueDate: data.nextPaymentDueDate?.toDate ? format(data.nextPaymentDueDate.toDate(), 'yyyy-MM-dd') : (data.nextPaymentDueDate || ''),
+        nextCollectionDate: data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : (data.nextCollectionDate || 'N/A'),
+        nextPaymentDueDate: data.nextPaymentDueDate?.toDate ? format(data.nextPaymentDueDate.toDate(), 'yyyy-MM-dd') : (data.nextPaymentDueDate || 'N/A'),
         paymentHistory: data.paymentHistory?.map((p: any) => ({
             ...p,
             date: p.date?.toDate ? format(p.date.toDate(), 'yyyy-MM-dd') : p.date,
@@ -63,25 +64,29 @@ export default function ClientDashboardPage() {
             </div>
         );
     }
-    
-    if (!clientData) {
-         return (
-            <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold font-headline">{t('hello')}!</h1>
-                    <p className="text-muted-foreground mt-2">
-                        It looks like your client account hasn't been fully set up by a service provider yet. 
-                        Please contact your waste collection provider to link your account.
-                    </p>
-                </div>
-            </div>
-        );
-    }
 
+     if (!clientData) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Welcome to RECOLIXO!</CardTitle>
+                    <CardDescription>It looks like your client account hasn't been fully set up by a service provider yet.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">Once a service provider adds you to their system, you will see your collection schedule, payment status, and more here.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+    
     return (
         <div className="space-y-6">
              <div>
-                <h1 className="text-3xl font-bold font-headline">{t('hello')}, {clientData.name}!</h1>
+                <h1 className="text-3xl font-bold font-headline">
+                    {t('hello')}
+                    {user?.displayName && `, ${user.displayName}`}
+                    !
+                </h1>
                 <p className="text-muted-foreground">{t('client_dashboard_subtitle')}</p>
             </div>
             <DashboardCards client={clientData} />

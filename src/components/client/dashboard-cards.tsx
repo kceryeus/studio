@@ -10,8 +10,12 @@ import LocationSharing from "./location-sharing";
 import { Badge } from "../ui/badge";
 import { useLanguage } from "@/context/language-context";
 
-export default function DashboardCards({ client }: { client: Client }) {
+export default function DashboardCards({ client }: { client: Client | null }) {
   const { t } = useLanguage();
+
+  if (!client) {
+    return null; // Don't render anything if there is no client data
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -57,13 +61,13 @@ export default function DashboardCards({ client }: { client: Client }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {client.paymentHistory.map(payment => (
+                {client.paymentHistory && client.paymentHistory.map(payment => (
                   <TableRow key={payment.id}>
                     <TableCell>{payment.date}</TableCell>
                     <TableCell className="text-right font-medium">{payment.amount.toFixed(2)} MT</TableCell>
                   </TableRow>
                 ))}
-                {client.paymentHistory.length === 0 && (
+                {(!client.paymentHistory || client.paymentHistory.length === 0) && (
                     <TableRow>
                         <TableCell colSpan={2} className="text-center text-muted-foreground">{t('no_payment_history')}</TableCell>
                     </TableRow>
@@ -74,8 +78,8 @@ export default function DashboardCards({ client }: { client: Client }) {
         </Card>
       </div>
       <div className="lg:col-span-1 space-y-6">
-        <GarbageStatusToggle initialStatus={client.garbageStatus} />
-        <LocationSharing initialStatus={client.sharesLocation} />
+        <GarbageStatusToggle initialStatus={client.garbageStatus} client={client} />
+        <LocationSharing initialStatus={client.sharesLocation} client={client}/>
       </div>
     </div>
   );
