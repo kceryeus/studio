@@ -15,8 +15,8 @@ const clientFromDoc = (doc: DocumentData): Client => {
     return {
         id: doc.id,
         ...data,
-        nextCollectionDate: data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : '',
-        nextPaymentDueDate: data.nextPaymentDueDate?.toDate ? format(data.nextPaymentDueDate.toDate(), 'yyyy-MM-dd') : '',
+        nextCollectionDate: data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : (data.nextCollectionDate || ''),
+        nextPaymentDueDate: data.nextPaymentDueDate?.toDate ? format(data.nextPaymentDueDate.toDate(), 'yyyy-MM-dd') : (data.nextPaymentDueDate || ''),
         paymentHistory: data.paymentHistory?.map((p: any) => ({
             ...p,
             date: p.date?.toDate ? format(p.date.toDate(), 'yyyy-MM-dd') : p.date,

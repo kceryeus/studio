@@ -7,7 +7,7 @@ import * as z from "zod"
 import { useRouter } from "next/navigation"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
-import { doc, setDoc, query, where, getDocs, collection, writeBatch } from "firebase/firestore";
+import { doc, setDoc, query, where, getDocs, collection, writeBatch, Timestamp } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -83,7 +83,11 @@ export default function SignupPage() {
             const batch = writeBatch(db);
             querySnapshot.forEach(clientDoc => {
                 // Link the unclaimed client profile to the new user ID
-                batch.update(clientDoc.ref, { userId: user.uid });
+                batch.update(clientDoc.ref, { 
+                  userId: user.uid,
+                  name: values.fullName, // Also update the name to match the signup name
+                  updatedAt: Timestamp.now()
+                });
             });
             await batch.commit();
              toast({
