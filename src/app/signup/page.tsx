@@ -72,7 +72,11 @@ export default function SignupPage() {
 
       // If the new user is a client, check for an unclaimed profile with the same email
       if (values.accountType === 'client') {
-          const q = query(collection(db, "clients"), where("email", "==", values.email), where("userId", "==", null));
+          const q = query(
+            collection(db, "clients"), 
+            where("email", "==", values.email), 
+            where("userId", "==", null)
+          );
           const querySnapshot = await getDocs(q);
 
           if (!querySnapshot.empty) {
@@ -96,11 +100,12 @@ export default function SignupPage() {
       })
       router.push("/login")
     } catch (error: any) {
+        console.error("Signup Error:", error);
         let errorMessage = "An unknown error occurred.";
         if (error.code === "auth/email-already-in-use") {
             errorMessage = "This email address is already in use. Please log in instead.";
-        } else if (error.code === 'permission-denied') {
-            errorMessage = "Database permission denied. Please check Firestore rules."
+        } else if (error.code === 'permission-denied' || error.code === 'missing-permission') {
+            errorMessage = "Database permission denied. Please check Firestore security rules."
         }
         toast({
             variant: "destructive",
