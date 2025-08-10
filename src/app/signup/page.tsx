@@ -7,7 +7,7 @@ import * as z from "zod"
 import { useRouter } from "next/navigation"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
-import { doc, setDoc, query, where, getDocs, collection, writeBatch, Timestamp } from "firebase/firestore";
+import { doc, setDoc, query, where, getDocs, collection, writeBatch, Timestamp, addDoc, serverTimestamp } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -62,7 +62,7 @@ export default function SignupPage() {
 
       await updateProfile(user, { displayName: values.fullName });
 
-      // Create a document in the 'users' collection with the user's UID as the document ID
+      // Create a document in the 'users' collection
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         displayName: values.fullName,
@@ -70,7 +70,7 @@ export default function SignupPage() {
         accountType: values.accountType
       });
 
-      // If the new user is a client, check for an unclaimed profile with the same email
+      // Handle client-specific logic
       if (values.accountType === 'client') {
           const q = query(
             collection(db, "clients"), 
@@ -80,13 +80,13 @@ export default function SignupPage() {
           const querySnapshot = await getDocs(q);
 
           if (!querySnapshot.empty) {
+            // Found an unclaimed profile, so link it
             const batch = writeBatch(db);
             querySnapshot.forEach(clientDoc => {
-                // Link the unclaimed client profile to the new user ID
                 batch.update(clientDoc.ref, { 
                   userId: user.uid,
-                  name: values.fullName, // Also update the name to match the signup name
-                  updatedAt: Timestamp.now()
+                  name: values.fullName,
+                  updatedAt: serverTimestamp()
                 });
             });
             await batch.commit();
@@ -94,15 +94,41 @@ export default function SignupPage() {
                 title: "Profile Claimed!",
                 description: "We've linked your account to your existing service profile.",
             })
+          } else {
+            // No unclaimed profile found, create a new basic client document for the user
+            await addDoc(collection(db, "clients"), {
+                userId: user.uid,
+                name: values.fullName,
+                email: values.email,
+                providerId: null, // No provider yet
+                collectionStatus: 'suspended',
+                paymentStatus: 'paid',
+                garbageStatus: 'pending',
+                nextCollectionDate: null,
+                nextPaymentDueDate: null,
+                paymentHistory: [],
+                balance: 0,
+                sharesLocation: false,
+                routeId: null,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                coordinates: { lat: 0, lng: 0 },
+                address: ""
+            });
           }
       }
 
-
       toast({
         title: t('account_created'),
-        description: t('redirecting_to_login'),
+        description: "Your account is ready. Redirecting you now...",
       })
-      router.push("/login")
+
+      if (values.accountType === 'provider') {
+        router.push("/provider/dashboard")
+      } else {
+        router.push("/client/dashboard")
+      }
+
     } catch (error: any) {
         console.error("Signup Error:", error);
         let errorMessage = "An unknown error occurred.";

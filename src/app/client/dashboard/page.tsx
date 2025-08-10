@@ -10,6 +10,8 @@ import { useLanguage } from "@/context/language-context";
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const clientFromDoc = (doc: DocumentData): Client => {
     const data = doc.data();
@@ -65,15 +67,19 @@ export default function ClientDashboardPage() {
         );
     }
 
-     if (!clientData) {
+     if (!clientData || !clientData.providerId) {
         return (
-            <Card>
+            <Card className="text-center">
                 <CardHeader>
                     <CardTitle>Welcome to RECOLIXO!</CardTitle>
-                    <CardDescription>It looks like your client account hasn't been fully set up by a service provider yet.</CardDescription>
+                    <CardDescription>You're all set up. The next step is to choose a service provider for your waste collection.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">Once a service provider adds you to their system, you will see your collection schedule, payment status, and more here.</p>
+                    <p className="text-muted-foreground mb-4">Browse available providers in your area to find the best service for you.</p>
+                    <Button asChild>
+                        {/* This link is a placeholder for where the provider marketplace would be */}
+                        <Link href="/provider/map">{t('go_to_provider_dashboard')}</Link>
+                    </Button>
                 </CardContent>
             </Card>
         )
