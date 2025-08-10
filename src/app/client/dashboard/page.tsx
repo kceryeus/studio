@@ -67,7 +67,8 @@ export default function ClientDashboardPage() {
         );
     }
 
-     if (!clientData || !clientData.providerId) {
+     // If client data exists but they don't have a provider yet, show onboarding.
+     if (clientData && !clientData.providerId) {
         return (
             <Card className="text-center">
                 <CardHeader>
@@ -84,18 +85,31 @@ export default function ClientDashboardPage() {
             </Card>
         )
     }
-    
-    return (
-        <div className="space-y-6">
-             <div>
-                <h1 className="text-3xl font-bold font-headline">
-                    {t('hello')}
-                    {user?.displayName && `, ${user.displayName}`}
-                    !
-                </h1>
-                <p className="text-muted-foreground">{t('client_dashboard_subtitle')}</p>
+
+    // If client has a provider, show the full dashboard.
+    if (clientData) {
+        return (
+            <div className="space-y-6">
+                 <div>
+                    <h1 className="text-3xl font-bold font-headline">
+                        {t('hello')}
+                        {user?.displayName && `, ${user.displayName}`}
+                        !
+                    </h1>
+                    <p className="text-muted-foreground">{t('client_dashboard_subtitle')}</p>
+                </div>
+                <DashboardCards client={clientData} />
             </div>
-            <DashboardCards client={clientData} />
-        </div>
+        );
+    }
+
+    // Fallback for any other state (e.g., error fetching data, no client doc found)
+    return (
+        <Card className="text-center">
+            <CardHeader>
+                <CardTitle>Error</CardTitle>
+                <CardDescription>Could not load your dashboard. Please try again later or contact support if the problem persists.</CardDescription>
+            </CardHeader>
+        </Card>
     );
 }

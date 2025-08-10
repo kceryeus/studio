@@ -7,7 +7,7 @@ import * as z from "zod"
 import { useRouter } from "next/navigation"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
-import { doc, setDoc, query, where, getDocs, collection, writeBatch, Timestamp, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, query, where, getDocs, collection, writeBatch, serverTimestamp, addDoc } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -72,6 +72,7 @@ export default function SignupPage() {
 
       // Handle client-specific logic
       if (values.accountType === 'client') {
+          // Check if an unclaimed client profile exists for this email
           const q = query(
             collection(db, "clients"), 
             where("email", "==", values.email), 
@@ -80,27 +81,27 @@ export default function SignupPage() {
           const querySnapshot = await getDocs(q);
 
           if (!querySnapshot.empty) {
-            // Found an unclaimed profile, so link it
+            // Found an unclaimed profile, so link it by updating it
             const batch = writeBatch(db);
             querySnapshot.forEach(clientDoc => {
                 batch.update(clientDoc.ref, { 
                   userId: user.uid,
-                  name: values.fullName,
+                  name: values.fullName, // Update name just in case
                   updatedAt: serverTimestamp()
                 });
             });
             await batch.commit();
              toast({
                 title: "Profile Claimed!",
-                description: "We've linked your account to your existing service profile.",
+                description: "We've linked your new account to your existing service profile.",
             })
           } else {
-            // No unclaimed profile found, create a new basic client document for the user
+            // No unclaimed profile found, so create a new basic client document for the new user
             await addDoc(collection(db, "clients"), {
                 userId: user.uid,
                 name: values.fullName,
                 email: values.email,
-                providerId: null, // No provider yet
+                providerId: null, // No provider assigned yet
                 collectionStatus: 'suspended',
                 paymentStatus: 'paid',
                 garbageStatus: 'pending',
@@ -108,12 +109,12 @@ export default function SignupPage() {
                 nextPaymentDueDate: null,
                 paymentHistory: [],
                 balance: 0,
-                sharesLocation: false,
+                sharesLocation: false, // Default to not sharing
                 routeId: null,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
-                coordinates: { lat: 0, lng: 0 },
-                address: ""
+                coordinates: { lat: 0, lng: 0 }, // Default coordinates
+                address: "" // Empty address
             });
           }
       }
@@ -134,7 +135,7 @@ export default function SignupPage() {
         let errorMessage = "An unknown error occurred.";
         if (error.code === "auth/email-already-in-use") {
             errorMessage = "This email address is already in use. Please log in instead.";
-        } else if (error.code === 'permission-denied' || error.code === 'missing-permission' || error.code === 'permission_denied') {
+        } else if (error.code === 'permission-denied' || error.code === 'missing-permission' || error.code === 'permission_denied' || error.message.includes('permission-denied') || error.message.includes('insufficient permissions')) {
             errorMessage = "Database permission denied. Please check Firestore security rules."
         }
         toast({
