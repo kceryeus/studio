@@ -32,30 +32,33 @@ export default function ClientDashboardPage() {
     const { user, loading: authLoading } = useAuth();
     const [clientData, setClientData] = useState<Client | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (authLoading) return;
+        if (authLoading) {
+            return;
+        }
         if (!user) {
             setLoading(false);
             return;
-        };
+        }
 
         const fetchClientData = async () => {
             setLoading(true);
-            setError(null);
-            const q = query(collection(db, "clients"), where("userId", "==", user.uid));
             try {
+                const q = query(collection(db, "clients"), where("userId", "==", user.uid));
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
                     const doc = querySnapshot.docs[0];
                     setClientData(clientFromDoc(doc));
                 } else {
-                    setClientData(null); // Explicitly set to null if not found
+                    // This can happen if the client document hasn't been created yet
+                    // The UI will handle this state.
+                    setClientData(null);
                 }
             } catch (err) {
                 console.error("Error fetching client data:", err);
-                setError("Failed to fetch dashboard data. Please check your connection and security rules.");
+                // Set clientData to null to trigger the error display
+                setClientData(null);
             } finally {
                 setLoading(false);
             }
@@ -72,38 +75,28 @@ export default function ClientDashboardPage() {
         );
     }
     
-    if (error) {
-        return (
-             <Card className="text-center">
-                <CardHeader>
-                    <CardTitle>Error</CardTitle>
-                    <CardDescription>{error}</CardDescription>
-                </CardHeader>
-            </Card>
-        )
-    }
-
-     // If client data exists but they don't have a provider yet, show onboarding.
-     if (clientData && !clientData.providerId) {
-        return (
-            <Card className="text-center">
-                <CardHeader>
-                    <CardTitle>Welcome to RECOLIXO!</CardTitle>
-                    <CardDescription>You're all set up. The next step is to choose a service provider for your waste collection.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground mb-4">Browse available providers in your area to find the best service for you.</p>
-                    <Button asChild>
-                        {/* This link is a placeholder for where the provider marketplace would be */}
-                        <Link href="/provider/map">{t('go_to_provider_dashboard')}</Link>
-                    </Button>
-                </CardContent>
-            </Card>
-        )
-    }
-
-    // If client has a provider, show the full dashboard.
+    // If client data exists...
     if (clientData) {
+        // ... but they don't have a provider yet, show onboarding.
+        if (!clientData.providerId) {
+            return (
+                <Card className="text-center">
+                    <CardHeader>
+                        <CardTitle>Welcome to RECOLIXO!</CardTitle>
+                        <CardDescription>You're all set up. The next step is to choose a service provider for your waste collection.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground mb-4">Browse available providers in your area to find the best service for you.</p>
+                        <Button asChild>
+                            {/* This link is a placeholder for where the provider marketplace would be */}
+                            <Link href="/provider/map">{t('go_to_provider_dashboard')}</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            )
+        }
+        
+        // ... and they have a provider, show the full dashboard.
         return (
             <div className="space-y-6">
                  <div>
@@ -119,7 +112,7 @@ export default function ClientDashboardPage() {
         );
     }
 
-    // Fallback for any other state (e.g., error fetching data, no client doc found)
+    // Fallback for any other state (e.g., error fetching data, no client doc found for a logged-in user)
     return (
         <Card className="text-center">
             <CardHeader>
