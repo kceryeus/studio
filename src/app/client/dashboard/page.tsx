@@ -1,9 +1,8 @@
-
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useAuth } from "@/context/auth-context";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, DocumentData } from "firebase/firestore";
+import { collection, query, where, onSnapshot, DocumentData } from "firebase/firestore";
 import type { Client } from '@/lib/types';
 import DashboardCards from "@/components/client/dashboard-cards";
 import { useLanguage } from "@/context/language-context";
@@ -34,38 +33,30 @@ export default function ClientDashboardPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (authLoading) {
-            return;
-        }
         if (!user) {
             setLoading(false);
             return;
         }
 
-        const fetchClientData = async () => {
-            setLoading(true);
-            try {
-                const q = query(collection(db, "clients"), where("userId", "==", user.uid));
-                const querySnapshot = await getDocs(q);
-                if (!querySnapshot.empty) {
-                    const doc = querySnapshot.docs[0];
-                    setClientData(clientFromDoc(doc));
-                } else {
-                    // This can happen if the client document hasn't been created yet
-                    // The UI will handle this state.
-                    setClientData(null);
-                }
-            } catch (err) {
-                console.error("Error fetching client data:", err);
-                // Set clientData to null to trigger the error display
+        const q = query(collection(db, "clients"), where("userId", "==", user.uid));
+        
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            if (!querySnapshot.empty) {
+                const doc = querySnapshot.docs[0];
+                setClientData(clientFromDoc(doc));
+            } else {
                 setClientData(null);
-            } finally {
-                setLoading(false);
             }
-        };
+            setLoading(false);
+        }, (err) => {
+            console.error("Error fetching client data:", err);
+            setClientData(null);
+            setLoading(false);
+        });
 
-        fetchClientData();
-    }, [user, authLoading]);
+        // Cleanup the listener on component unmount
+        return () => unsubscribe();
+    }, [user]);
 
     if (loading || authLoading) {
         return (

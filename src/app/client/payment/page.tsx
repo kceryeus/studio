@@ -1,11 +1,10 @@
-
 "use client";
 import React, { useEffect, useState } from 'react';
 import PaymentForm from "@/components/client/payment-form";
 import { useLanguage } from "@/context/language-context";
 import { useAuth } from "@/context/auth-context";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, DocumentData } from "firebase/firestore";
+import { collection, query, where, onSnapshot, DocumentData } from "firebase/firestore";
 import type { Client } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -31,37 +30,31 @@ export default function ClientPaymentPage() {
     const { user, loading: authLoading } = useAuth();
     const [clientData, setClientData] = useState<Client | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
-     useEffect(() => {
-        if (authLoading) return;
+    useEffect(() => {
         if (!user) {
             setLoading(false);
             return;
         };
 
-        const fetchClientData = async () => {
-            setLoading(true);
-            setError(null);
-            const q = query(collection(db, "clients"), where("userId", "==", user.uid));
-            try {
-                const querySnapshot = await getDocs(q);
-                if (!querySnapshot.empty) {
-                    const doc = querySnapshot.docs[0];
-                    setClientData(clientFromDoc(doc));
-                } else {
-                    setClientData(null);
-                }
-            } catch (err) {
-                 console.error("Error fetching client data for payment:", err);
-                 setError("Could not load payment information. Please ensure you have an active service provider.");
-            } finally {
-                setLoading(false);
-            }
-        };
+        const q = query(collection(db, "clients"), where("userId", "==", user.uid));
 
-        fetchClientData();
-    }, [user, authLoading]);
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            if (!querySnapshot.empty) {
+                const doc = querySnapshot.docs[0];
+                setClientData(clientFromDoc(doc));
+            } else {
+                setClientData(null);
+            }
+            setLoading(false);
+        }, (err) => {
+             console.error("Error fetching client data for payment:", err);
+             setClientData(null);
+             setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
 
     if (loading || authLoading) {
         return (
@@ -71,7 +64,7 @@ export default function ClientPaymentPage() {
         );
     }
     
-    if (error || !clientData) {
+    if (!clientData || !clientData.providerId) {
          return (
              <div className="max-w-2xl mx-auto">
                  <div>
@@ -83,7 +76,7 @@ export default function ClientPaymentPage() {
                          <CardTitle>Unable to Load Payment Form</CardTitle>
                      </CardHeader>
                      <CardContent>
-                         <p>{error || "You must have an active service provider to make a payment."}</p>
+                         <p>You must have an active service provider to make a payment.</p>
                      </CardContent>
                  </Card>
             </div>
