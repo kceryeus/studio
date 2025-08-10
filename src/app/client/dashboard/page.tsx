@@ -32,6 +32,7 @@ export default function ClientDashboardPage() {
     const { user, loading: authLoading } = useAuth();
     const [clientData, setClientData] = useState<Client | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (authLoading) return;
@@ -42,15 +43,19 @@ export default function ClientDashboardPage() {
 
         const fetchClientData = async () => {
             setLoading(true);
+            setError(null);
             const q = query(collection(db, "clients"), where("userId", "==", user.uid));
             try {
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
                     const doc = querySnapshot.docs[0];
                     setClientData(clientFromDoc(doc));
+                } else {
+                    setClientData(null); // Explicitly set to null if not found
                 }
-            } catch (error) {
-                console.error("Error fetching client data:", error);
+            } catch (err) {
+                console.error("Error fetching client data:", err);
+                setError("Failed to fetch dashboard data. Please check your connection and security rules.");
             } finally {
                 setLoading(false);
             }
@@ -65,6 +70,17 @@ export default function ClientDashboardPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
+    }
+    
+    if (error) {
+        return (
+             <Card className="text-center">
+                <CardHeader>
+                    <CardTitle>Error</CardTitle>
+                    <CardDescription>{error}</CardDescription>
+                </CardHeader>
+            </Card>
+        )
     }
 
      // If client data exists but they don't have a provider yet, show onboarding.

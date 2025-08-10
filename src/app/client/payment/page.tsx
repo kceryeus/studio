@@ -9,6 +9,7 @@ import { collection, query, where, getDocs, DocumentData } from "firebase/firest
 import type { Client } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const clientFromDoc = (doc: DocumentData): Client => {
     const data = doc.data();
@@ -30,6 +31,7 @@ export default function ClientPaymentPage() {
     const { user, loading: authLoading } = useAuth();
     const [clientData, setClientData] = useState<Client | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
      useEffect(() => {
         if (authLoading) return;
@@ -40,24 +42,52 @@ export default function ClientPaymentPage() {
 
         const fetchClientData = async () => {
             setLoading(true);
+            setError(null);
             const q = query(collection(db, "clients"), where("userId", "==", user.uid));
-            const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-                const doc = querySnapshot.docs[0];
-                setClientData(clientFromDoc(doc));
+            try {
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const doc = querySnapshot.docs[0];
+                    setClientData(clientFromDoc(doc));
+                } else {
+                    setClientData(null);
+                }
+            } catch (err) {
+                 console.error("Error fetching client data for payment:", err);
+                 setError("Could not load payment information. Please ensure you have an active service provider.");
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
 
         fetchClientData();
     }, [user, authLoading]);
 
-    if (loading || authLoading || !clientData) {
+    if (loading || authLoading) {
         return (
             <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
+    }
+    
+    if (error || !clientData) {
+         return (
+             <div className="max-w-2xl mx-auto">
+                 <div>
+                    <h1 className="text-3xl font-bold font-headline">{t('make_a_payment_title')}</h1>
+                    <p className="text-muted-foreground">{t('make_a_payment_subtitle')}</p>
+                </div>
+                 <Card className="mt-6">
+                     <CardHeader>
+                         <CardTitle>Unable to Load Payment Form</CardTitle>
+                     </CardHeader>
+                     <CardContent>
+                         <p>{error || "You must have an active service provider to make a payment."}</p>
+                     </CardContent>
+                 </Card>
+            </div>
+         )
     }
 
     return (
