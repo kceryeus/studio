@@ -13,11 +13,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 const clientFromDoc = (doc: DocumentData): Client => {
     const data = doc.data();
+    // Safely format dates only if they exist
+    const nextCollectionDate = data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : 'N/A';
+    const nextPaymentDueDate = data.nextPaymentDueDate?.toDate ? format(data.nextPaymentDueDate.toDate(), 'yyyy-MM-dd') : 'N/A';
+    
     return {
         id: doc.id,
         ...data,
-        nextCollectionDate: data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : (data.nextCollectionDate || 'N/A'),
-        nextPaymentDueDate: data.nextPaymentDueDate?.toDate ? format(data.nextPaymentDueDate.toDate(), 'yyyy-MM-dd') : (data.nextPaymentDueDate || 'N/A'),
+        nextCollectionDate,
+        nextPaymentDueDate,
         paymentHistory: data.paymentHistory?.map((p: any) => ({
             ...p,
             date: p.date?.toDate ? format(p.date.toDate(), 'yyyy-MM-dd') : p.date,
@@ -39,7 +43,6 @@ export default function ClientPaymentPage() {
             return;
         };
 
-        // This query is allowed by our rules because it filters by userId.
         const q = query(collection(db, "clients"), where("userId", "==", user.uid));
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {

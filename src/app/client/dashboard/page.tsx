@@ -15,11 +15,15 @@ import Link from 'next/link';
 
 const clientFromDoc = (doc: DocumentData): Client => {
     const data = doc.data();
+    // Safely format dates only if they exist
+    const nextCollectionDate = data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : 'N/A';
+    const nextPaymentDueDate = data.nextPaymentDueDate?.toDate ? format(data.nextPaymentDueDate.toDate(), 'yyyy-MM-dd') : 'N/A';
+    
     return {
         id: doc.id,
         ...data,
-        nextCollectionDate: data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : (data.nextCollectionDate || 'N/A'),
-        nextPaymentDueDate: data.nextPaymentDueDate?.toDate ? format(data.nextPaymentDueDate.toDate(), 'yyyy-MM-dd') : (data.nextPaymentDueDate || 'N/A'),
+        nextCollectionDate,
+        nextPaymentDueDate,
         paymentHistory: data.paymentHistory?.map((p: any) => ({
             ...p,
             date: p.date?.toDate ? format(p.date.toDate(), 'yyyy-MM-dd') : p.date,
@@ -40,7 +44,6 @@ export default function ClientDashboardPage() {
             return;
         }
 
-        // This query is allowed by our rules because it filters by userId.
         const q = query(collection(db, "clients"), where("userId", "==", user.uid));
         
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -69,7 +72,6 @@ export default function ClientDashboardPage() {
     }
     
     if (clientData) {
-        // If client data exists... but they don't have a provider yet, show onboarding.
         if (!clientData.providerId) {
             return (
                 <Card className="text-center">
@@ -80,7 +82,6 @@ export default function ClientDashboardPage() {
                     <CardContent>
                         <p className="text-muted-foreground mb-4">Browse available providers in your area to find the best service for you.</p>
                         <Button asChild>
-                            {/* This link should eventually point to a provider marketplace page */}
                             <Link href="/provider/map">{t('go_to_provider_dashboard')}</Link>
                         </Button>
                     </CardContent>
@@ -88,7 +89,6 @@ export default function ClientDashboardPage() {
             )
         }
         
-        // ... and they have a provider, show the full dashboard.
         return (
             <div className="space-y-6">
                  <div>
@@ -104,7 +104,6 @@ export default function ClientDashboardPage() {
         );
     }
 
-    // Fallback for any other state (e.g., error fetching data, no client doc found for a logged-in user)
     return (
         <Card className="text-center">
             <CardHeader>
