@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { MapPin, ShieldCheck, ShieldAlert, PlusCircle, Loader2, Link, Link2Off } from 'lucide-react';
+import { MapPin, ShieldCheck, ShieldAlert, PlusCircle, Loader2, Link, Link2Off, User, Mail, DollarSign, Route as RouteIcon } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -160,8 +160,17 @@ export default function ClientList() {
     
     const clientRef = doc(db, "clients", editingClient.id);
     try {
+        const dataToUpdate = { ...editingClient };
+        // Ensure dates are converted to Timestamps if they are strings
+        if (typeof dataToUpdate.nextCollectionDate === 'string') {
+            dataToUpdate.nextCollectionDate = Timestamp.fromDate(new Date(dataToUpdate.nextCollectionDate));
+        }
+        if (typeof dataToUpdate.nextPaymentDueDate === 'string') {
+            dataToUpdate.nextPaymentDueDate = Timestamp.fromDate(new Date(dataToUpdate.nextPaymentDueDate));
+        }
+
         await updateDoc(clientRef, {
-            ...editingClient,
+            ...dataToUpdate,
             updatedAt: serverTimestamp(),
         });
         toast({
@@ -320,18 +329,70 @@ export default function ClientList() {
 
       {/* Edit Client Dialog */}
       <Dialog open={!!selectedClient} onOpenChange={handleCloseDialog}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{selectedClient?.name}</DialogTitle>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
-                <MapPin className="w-4 h-4" /> {selectedClient?.address}
-            </div>
+            <DialogTitle>Edit Client: {selectedClient?.name}</DialogTitle>
+            <DialogDescription>
+                Update client information below.
+            </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <p>More editing fields can be added here.</p>
-            <p className="text-xs text-muted-foreground mt-2">Created: {selectedClient?.createdAt as string}</p>
-            <p className="text-xs text-muted-foreground">Last Updated: {selectedClient?.updatedAt as string}</p>
-          </div>
+          {editingClient && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                <div className="space-y-2">
+                    <Label htmlFor="edit-client-name">Full Name</Label>
+                    <Input id="edit-client-name" value={editingClient.name || ''} onChange={e => setEditingClient(prev => ({...prev, name: e.target.value}))} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="edit-client-address">Address</Label>
+                    <Input id="edit-client-address" value={editingClient.address || ''} onChange={e => setEditingClient(prev => ({...prev, address: e.target.value}))} />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="edit-client-email">Email</Label>
+                    <Input id="edit-client-email" type="email" value={editingClient.email || ''} onChange={e => setEditingClient(prev => ({...prev, email: e.target.value}))} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="edit-client-balance">Balance (MT)</Label>
+                    <Input id="edit-client-balance" type="number" value={editingClient.balance || 0} onChange={e => setEditingClient(prev => ({...prev, balance: parseFloat(e.target.value) || 0}))} />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="edit-collection-status">Collection Status</Label>
+                    <Select value={editingClient.collectionStatus || 'active'} onValueChange={value => setEditingClient(prev => ({...prev, collectionStatus: value as CollectionStatus}))}>
+                        <SelectTrigger id="edit-collection-status"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="suspended">Suspended</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="edit-payment-status">Payment Status</Label>
+                    <Select value={editingClient.paymentStatus || 'due'} onValueChange={value => setEditingClient(prev => ({...prev, paymentStatus: value as PaymentStatus}))}>
+                        <SelectTrigger id="edit-payment-status"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="due">Due</SelectItem>
+                            <SelectItem value="overdue">Overdue</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="edit-client-route">Assign to Route</Label>
+                    <Select value={editingClient.routeId || ''} onValueChange={value => setEditingClient(prev => ({...prev, routeId: value}))}>
+                        <SelectTrigger id="edit-client-route"><SelectValue placeholder="Select a route" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="">No Route</SelectItem>
+                            {DUMMY_ROUTES.map(route => (
+                                <SelectItem key={route.id} value={route.id}>{route.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="text-xs text-muted-foreground col-span-2">
+                  <p>Created: {selectedClient?.createdAt as string}</p>
+                  <p>Last Updated: {selectedClient?.updatedAt as string}</p>
+                </div>
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={handleCloseDialog}>{t('cancel')}</Button>
             <Button onClick={handleSaveChanges}>{t('save_changes')}</Button>
