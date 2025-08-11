@@ -377,10 +377,10 @@ export default function ClientList() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="edit-client-route">Assign to Route</Label>
-                    <Select value={editingClient.routeId || ''} onValueChange={value => setEditingClient(prev => ({...prev, routeId: value}))}>
+                    <Select value={editingClient.routeId || 'none'} onValueChange={value => setEditingClient(prev => ({...prev, routeId: value === 'none' ? null : value}))}>
                         <SelectTrigger id="edit-client-route"><SelectValue placeholder="Select a route" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">No Route</SelectItem>
+                            <SelectItem value="none">No Route</SelectItem>
                             {DUMMY_ROUTES.map(route => (
                                 <SelectItem key={route.id} value={route.id}>{route.name}</SelectItem>
                             ))}
@@ -423,11 +423,12 @@ export default function ClientList() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="new-client-route">Assign to Route</Label>
-                        <Select value={newClient.routeId || ''} onValueChange={value => setNewClient({...newClient, routeId: value})}>
+                        <Select value={newClient.routeId || 'none'} onValueChange={value => setNewClient({...newClient, routeId: value === 'none' ? null : value})}>
                            <SelectTrigger id="new-client-route">
                                 <SelectValue placeholder="Select a route" />
                            </SelectTrigger>
                            <SelectContent>
+                                <SelectItem value="none">No Route</SelectItem>
                                 {DUMMY_ROUTES.map(route => (
                                     <SelectItem key={route.id} value={route.id}>{route.name}</SelectItem>
                                 ))}
