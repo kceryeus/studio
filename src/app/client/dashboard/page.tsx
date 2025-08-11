@@ -33,6 +33,9 @@ export default function ClientDashboardPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (authLoading) {
+            return;
+        }
         if (!user) {
             setLoading(false);
             return;
@@ -56,7 +59,7 @@ export default function ClientDashboardPage() {
 
         // Cleanup the listener on component unmount
         return () => unsubscribe();
-    }, [user]);
+    }, [user, authLoading]);
 
     if (loading || authLoading) {
         return (

@@ -32,6 +32,9 @@ export default function ClientPaymentPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (authLoading) {
+            return;
+        }
         if (!user) {
             setLoading(false);
             return;
@@ -54,7 +57,7 @@ export default function ClientPaymentPage() {
         });
 
         return () => unsubscribe();
-    }, [user]);
+    }, [user, authLoading]);
 
     if (loading || authLoading) {
         return (
