@@ -7,9 +7,10 @@ import { collection, query, where, onSnapshot, DocumentData } from "firebase/fir
 import type { Client } from '@/lib/types';
 import DashboardCards from "@/components/client/dashboard-cards";
 import { useLanguage } from "@/context/language-context";
-import { Loader2 } from 'lucide-react';
+import { Loader2, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -72,23 +73,6 @@ export default function ClientDashboardPage() {
     }
     
     if (clientData) {
-        if (!clientData.providerId) {
-            return (
-                <Card className="text-center">
-                    <CardHeader>
-                        <CardTitle>Welcome to RECOLIXO!</CardTitle>
-                        <CardDescription>You're all set up. The next step is to choose a service provider for your waste collection.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground mb-4">Browse available providers in your area to find the best service for you.</p>
-                        <Button asChild>
-                            <Link href="/provider/map">{t('go_to_provider_dashboard')}</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-            )
-        }
-        
         return (
             <div className="space-y-6">
                  <div>
@@ -99,6 +83,22 @@ export default function ClientDashboardPage() {
                     </h1>
                     <p className="text-muted-foreground">{t('client_dashboard_subtitle')}</p>
                 </div>
+
+                {!clientData.providerId && (
+                     <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Welcome to RECOLIXO!</AlertTitle>
+                        <AlertDescription className="flex justify-between items-center">
+                           <div>
+                             You're all set up. The next step is to choose a service provider for your waste collection. Browse available providers in your area to find the best service for you.
+                           </div>
+                           <Button asChild>
+                                <Link href="/provider/map">Find a Provider</Link>
+                           </Button>
+                        </AlertDescription>
+                    </Alert>
+                )}
+
                 <DashboardCards client={clientData} />
             </div>
         );

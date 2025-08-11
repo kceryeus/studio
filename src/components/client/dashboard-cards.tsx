@@ -14,8 +14,10 @@ export default function DashboardCards({ client }: { client: Client | null }) {
   const { t } = useLanguage();
 
   if (!client) {
-    return null; // Don't render anything if there is no client data
+    return null;
   }
+  
+  const hasProvider = !!client.providerId;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -27,7 +29,10 @@ export default function DashboardCards({ client }: { client: Client | null }) {
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">{t('next_collection_date')}</p>
-                <p className="text-lg font-semibold flex items-center gap-2"><Calendar className="w-4 h-4" /> {client.nextCollectionDate}</p>
+                <p className="text-lg font-semibold flex items-center gap-2">
+                    <Calendar className="w-4 h-4" /> 
+                    {hasProvider ? client.nextCollectionDate : 'N/A'}
+                </p>
             </div>
              <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">{t('collection_status_label')}</p>
@@ -37,7 +42,10 @@ export default function DashboardCards({ client }: { client: Client | null }) {
             </div>
             <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">{t('next_payment_due')}</p>
-                <p className="text-lg font-semibold flex items-center gap-2"><CircleDollarSign className="w-4 h-4" /> {client.nextPaymentDueDate}</p>
+                <p className="text-lg font-semibold flex items-center gap-2">
+                    <CircleDollarSign className="w-4 h-4" /> 
+                    {hasProvider ? client.nextPaymentDueDate : 'N/A'}
+                </p>
             </div>
             <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">{t('current_balance')}</p>
@@ -61,13 +69,12 @@ export default function DashboardCards({ client }: { client: Client | null }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {client.paymentHistory && client.paymentHistory.map(payment => (
+                {client.paymentHistory && client.paymentHistory.length > 0 ? client.paymentHistory.map(payment => (
                   <TableRow key={payment.id}>
                     <TableCell>{payment.date}</TableCell>
                     <TableCell className="text-right font-medium">{payment.amount.toFixed(2)} MT</TableCell>
                   </TableRow>
-                ))}
-                {(!client.paymentHistory || client.paymentHistory.length === 0) && (
+                )) : (
                     <TableRow>
                         <TableCell colSpan={2} className="text-center text-muted-foreground">{t('no_payment_history')}</TableCell>
                     </TableRow>

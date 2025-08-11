@@ -13,7 +13,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 const clientFromDoc = (doc: DocumentData): Client => {
     const data = doc.data();
-    // Safely format dates only if they exist
     const nextCollectionDate = data.nextCollectionDate?.toDate ? format(data.nextCollectionDate.toDate(), 'yyyy-MM-dd') : 'N/A';
     const nextPaymentDueDate = data.nextPaymentDueDate?.toDate ? format(data.nextPaymentDueDate.toDate(), 'yyyy-MM-dd') : 'N/A';
     
@@ -70,19 +69,34 @@ export default function ClientPaymentPage() {
         );
     }
     
-    if (!clientData || !clientData.providerId) {
+    if (!clientData) {
+         return (
+             <div className="max-w-2xl mx-auto">
+                 <Card className="mt-6 text-center">
+                     <CardHeader>
+                         <CardTitle>Unable to Load Payment Page</CardTitle>
+                     </CardHeader>
+                     <CardContent>
+                         <p>We could not find your client data. Please try again later.</p>
+                     </CardContent>
+                 </Card>
+            </div>
+         )
+    }
+
+    if (!clientData.providerId) {
          return (
              <div className="max-w-2xl mx-auto">
                  <div>
                     <h1 className="text-3xl font-bold font-headline">{t('make_a_payment_title')}</h1>
                     <p className="text-muted-foreground">{t('make_a_payment_subtitle')}</p>
                 </div>
-                 <Card className="mt-6">
+                 <Card className="mt-6 text-center">
                      <CardHeader>
-                         <CardTitle>Unable to Load Payment Form</CardTitle>
+                         <CardTitle>No Service Provider Selected</CardTitle>
                      </CardHeader>
                      <CardContent>
-                         <p>You must have an active service provider to make a payment.</p>
+                         <p className="text-muted-foreground">You must have an active service provider to make a payment. Please select a provider from the map to begin service.</p>
                      </CardContent>
                  </Card>
             </div>
