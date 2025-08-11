@@ -24,6 +24,7 @@ export default function ProviderDashboardPage() {
         return;
     };
     
+    // This query is allowed by our rules because it filters by providerId.
     const q = query(collection(db, "clients"), where("providerId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const clientsData: Client[] = [];

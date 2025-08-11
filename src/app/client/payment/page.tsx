@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useEffect, useState } from 'react';
 import PaymentForm from "@/components/client/payment-form";
@@ -32,14 +33,13 @@ export default function ClientPaymentPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (authLoading) {
-            return;
-        }
+        if (authLoading) return;
         if (!user) {
             setLoading(false);
             return;
         };
 
+        // This query is allowed by our rules because it filters by userId.
         const q = query(collection(db, "clients"), where("userId", "==", user.uid));
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {

@@ -70,9 +70,9 @@ export default function SignupPage() {
         accountType: values.accountType
       });
 
-      // Handle client-specific logic
+      // Handle client-specific logic for claiming or creating a profile
       if (values.accountType === 'client') {
-          // Check if an unclaimed client profile exists for this email
+          // This query is allowed by our rules because it filters by email and userId == null
           const q = query(
             collection(db, "clients"), 
             where("email", "==", values.email), 
@@ -102,19 +102,19 @@ export default function SignupPage() {
                 name: values.fullName,
                 email: values.email,
                 providerId: null, // No provider assigned yet
-                collectionStatus: 'suspended',
+                collectionStatus: 'active',
                 paymentStatus: 'paid',
                 garbageStatus: 'pending',
                 nextCollectionDate: null,
                 nextPaymentDueDate: null,
                 paymentHistory: [],
                 balance: 0,
-                sharesLocation: false, // Default to not sharing
+                sharesLocation: false,
                 routeId: null,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
-                coordinates: { lat: 0, lng: 0 }, // Default coordinates
-                address: "" // Empty address
+                coordinates: { lat: 0, lng: 0 },
+                address: ""
             });
           }
       }

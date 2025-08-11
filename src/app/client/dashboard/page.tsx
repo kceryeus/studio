@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useAuth } from "@/context/auth-context";
@@ -33,14 +34,13 @@ export default function ClientDashboardPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (authLoading) {
-            return;
-        }
+        if (authLoading) return;
         if (!user) {
             setLoading(false);
             return;
         }
 
+        // This query is allowed by our rules because it filters by userId.
         const q = query(collection(db, "clients"), where("userId", "==", user.uid));
         
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -57,7 +57,6 @@ export default function ClientDashboardPage() {
             setLoading(false);
         });
 
-        // Cleanup the listener on component unmount
         return () => unsubscribe();
     }, [user, authLoading]);
 
@@ -69,9 +68,8 @@ export default function ClientDashboardPage() {
         );
     }
     
-    // If client data exists...
     if (clientData) {
-        // ... but they don't have a provider yet, show onboarding.
+        // If client data exists... but they don't have a provider yet, show onboarding.
         if (!clientData.providerId) {
             return (
                 <Card className="text-center">
@@ -82,7 +80,7 @@ export default function ClientDashboardPage() {
                     <CardContent>
                         <p className="text-muted-foreground mb-4">Browse available providers in your area to find the best service for you.</p>
                         <Button asChild>
-                            {/* This link is a placeholder for where the provider marketplace would be */}
+                            {/* This link should eventually point to a provider marketplace page */}
                             <Link href="/provider/map">{t('go_to_provider_dashboard')}</Link>
                         </Button>
                     </CardContent>
