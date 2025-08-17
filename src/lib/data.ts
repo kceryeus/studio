@@ -5,22 +5,68 @@ export const DUMMY_ROUTES: Route[] = [
     { 
         id: 'ROUTE01', 
         name: 'Rota do Centro da Cidade', 
+        color: '#3B82F6',
         weekdays: ['Monday', 'Thursday'],
-        path: [
-            { lat: -25.9613, lng: 32.5895 },
-            { lat: -25.9559, lng: 32.5727 }
-        ]
+        collectionTimes: [],
+        points: [
+            {
+                id: 'point1',
+                type: 'unassociated',
+                coordinates: { lat: -25.965, lng: 32.583 },
+                order: 0,
+                notes: 'Starting point'
+            },
+            {
+                id: 'point2',
+                type: 'unassociated',
+                coordinates: { lat: -25.958, lng: 32.590 },
+                order: 1,
+                notes: 'Collection point 1'
+            },
+            {
+                id: 'point3',
+                type: 'unassociated',
+                coordinates: { lat: -25.952, lng: 32.578 },
+                order: 2,
+                notes: 'Collection point 2'
+            }
+        ],
+        isActive: true,
+        providerId: 'dummy-provider',
+        totalDistance: 2500, // 2.5 km
+        estimatedDuration: 1800, // 30 minutes
+        routingData: {
+            segmentCoordinates: [
+                JSON.stringify([[32.583, -25.965], [32.585, -25.963], [32.587, -25.961], [32.590, -25.958]]),
+                JSON.stringify([[32.590, -25.958], [32.588, -25.956], [32.585, -25.954], [32.578, -25.952]])
+            ],
+            segmentDistances: [1200, 1300],
+            segmentDurations: [900, 900],
+            totalDistance: 2500,
+            totalDuration: 1800,
+            lastCalculated: new Date()
+        }
     },
     { 
         id: 'ROUTE02', 
         name: 'Linha Suburbana', 
+        color: '#10B981',
         weekdays: ['Tuesday', 'Friday'],
-        path: [
-            { lat: -25.9754, lng: 32.5768 },
-            { lat: -25.9818, lng: 32.5940 }
-        ]
+        collectionTimes: [],
+        points: [],
+        isActive: true,
+        providerId: 'dummy-provider'
     },
-    { id: 'ROUTE03', name: 'Parque Industrial', weekdays: ['Wednesday'] },
+    { 
+        id: 'ROUTE03', 
+        name: 'Parque Industrial', 
+        color: '#F59E0B',
+        weekdays: ['Wednesday'],
+        collectionTimes: [],
+        points: [],
+        isActive: true,
+        providerId: 'dummy-provider'
+    },
 ];
 
 const VEH01_Fuel: FuelLogEntry[] = [

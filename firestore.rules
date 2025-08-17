@@ -1,0 +1,62 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users Collection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Clients Collection
+    match /clients/{clientId} {
+
+      // Create: only a provider can create a client doc for themselves
+      allow create: if request.auth != null &&
+                    request.auth.uid == request.resource.data.providerId;
+
+      // Get: provider or assigned user (client) can read the doc
+      allow get: if request.auth != null &&
+        (
+          request.auth.uid == resource.data.userId ||
+          request.auth.uid == resource.data.providerId
+        );
+
+      // Update: provider, client, or unclaimed profile claim
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.providerId ||
+        request.auth.uid == resource.data.userId ||
+        (
+          request.resource.data.userId == request.auth.uid &&
+          resource.data.userId == null
+        )
+      );
+
+      // List: provider sees their clients,
+      //       client sees their own doc,
+      //       or new user finds unclaimed profile by email
+      allow list: if request.auth != null &&
+        (
+          resource.data.providerId == request.auth.uid ||
+          resource.data.userId == request.auth.uid ||
+          (
+            resource.data.email == request.auth.token.email &&
+            resource.data.userId == null
+          )
+        );
+
+      // Delete: disabled for safety
+      allow delete: if false;
+    }
+
+    // Routes Collection - Fixed: moved to root level
+    match /routes/{routeId} {
+      allow create, update: if request.auth != null &&
+                             request.auth.uid == request.resource.data.providerId;
+      allow delete: if request.auth != null &&
+                     request.auth.uid == resource.data.providerId;
+      allow get, list: if request.auth != null &&
+                        request.auth.uid == resource.data.providerId;
+    }
+  }
+}

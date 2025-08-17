@@ -21,6 +21,7 @@ import Map, { Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useAuth } from '@/context/auth-context';
 import { DUMMY_ROUTES } from '@/lib/data';
+import { formatPhoneNumber, isValidMozambiquePhone } from '@/lib/utils';
 
 const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/streets-v2/style.json?key=xQ1eFBidgVoYA8BIrNEu`;
 
@@ -59,6 +60,7 @@ const LinkedBadge = ({ isLinked }: { isLinked: boolean }) => {
 
 const initialNewClientState = (): Partial<Client> => ({
   name: '',
+  phone: '',
   address: '',
   email: '',
   coordinates: { lat: -25.965, lng: 32.583 },
@@ -137,7 +139,9 @@ export default function ClientList() {
 
   const filteredClients = useMemo(() => {
     return clients.filter(client => {
-      const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) || client.address.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           client.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           client.phone.includes(searchTerm);
       const matchesCollection = collectionFilter === 'all' || client.collectionStatus === collectionFilter;
       const matchesPayment = paymentFilter === 'all' || client.paymentStatus === paymentFilter;
       return matchesSearch && matchesCollection && matchesPayment;
@@ -193,18 +197,29 @@ export default function ClientList() {
         toast({ variant: 'destructive', title: 'Not authenticated'});
         return;
     }
-    if (!newClient.name || !newClient.address) {
-        toast({ variant: 'destructive', title: 'Missing Information', description: 'Name and address are required.'});
+    if (!newClient.name || !newClient.phone) {
+        toast({ variant: 'destructive', title: 'Missing Information', description: 'Name and phone number are required.'});
+        return;
+    }
+
+    // Validate phone number format
+    if (!isValidMozambiquePhone(newClient.phone)) {
+        toast({ 
+            variant: 'destructive', 
+            title: 'Invalid Phone Number', 
+            description: 'Please enter a valid 9-digit phone number starting with 8 or 9' 
+        });
         return;
     }
     
     const clientToAdd = {
         ...initialNewClientState(),
         ...newClient,
+        phone: formatPhoneNumber(newClient.phone), // Format phone number
         providerId: user.uid,
         balance: parseFloat(newClient.balance as any) || 0,
-        nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) : Timestamp.fromDate(new Date()),
-        nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) : Timestamp.fromDate(new Date()),
+        nextCollectionDate: newClient.nextCollectionDate ? Timestamp.fromDate(new Date(newClient.nextCollectionDate)) : null,
+        nextPaymentDueDate: newClient.nextPaymentDueDate ? Timestamp.fromDate(new Date(newClient.nextPaymentDueDate)) : null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     };
@@ -248,7 +263,7 @@ export default function ClientList() {
           </div>
           <div className="flex flex-col md:flex-row gap-4 pt-4">
             <Input 
-              placeholder={t('search_by_name_or_address')}
+              placeholder="Search by name, address, or phone"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-sm"
@@ -284,6 +299,7 @@ export default function ClientList() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>{t('client')}</TableHead>
+                            <TableHead>Phone</TableHead>
                             <TableHead>Account Status</TableHead>
                             <TableHead>{t('collection_status')}</TableHead>
                             <TableHead>{t('payment_status')}</TableHead>
@@ -293,7 +309,7 @@ export default function ClientList() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-12">
+                                <TableCell colSpan={6} className="text-center py-12">
                                     <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
                                     <p className="mt-2 text-muted-foreground">Loading clients...</p>
                                 </TableCell>
@@ -302,6 +318,7 @@ export default function ClientList() {
                             filteredClients.map(client => (
                                 <TableRow key={client.id} onClick={() => handleRowClick(client)} className="cursor-pointer">
                                     <TableCell className="font-medium">{client.name}</TableCell>
+                                    <TableCell className="font-mono text-sm">{client.phone}</TableCell>
                                     <TableCell>
                                         <LinkedBadge isLinked={!!client.userId} />
                                     </TableCell>
@@ -316,7 +333,7 @@ export default function ClientList() {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                                <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                                     {t('no_clients_match_filters')}
                                 </TableCell>
                             </TableRow>
@@ -343,7 +360,11 @@ export default function ClientList() {
                     <Input id="edit-client-name" value={editingClient.name || ''} onChange={e => setEditingClient(prev => ({...prev, name: e.target.value}))} />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="edit-client-address">Address</Label>
+                    <Label htmlFor="edit-client-phone">Phone Number</Label>
+                    <Input id="edit-client-phone" value={editingClient.phone || ''} onChange={e => setEditingClient(prev => ({...prev, phone: e.target.value}))} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="edit-client-address">Address (Optional)</Label>
                     <Input id="edit-client-address" value={editingClient.address || ''} onChange={e => setEditingClient(prev => ({...prev, address: e.target.value}))} />
                 </div>
                  <div className="space-y-2">
@@ -410,12 +431,26 @@ export default function ClientList() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="new-client-name">Full Name</Label>
+                        <Label htmlFor="new-client-name">Full Name *</Label>
                         <Input id="new-client-name" value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value})} />
                     </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="new-client-phone">Phone Number *</Label>
+                        <Input 
+                            id="new-client-phone" 
+                            value={newClient.phone} 
+                            onChange={e => setNewClient({...newClient, phone: e.target.value})} 
+                            placeholder="8X1234567" 
+                        />
+                        {newClient.phone && !isValidMozambiquePhone(newClient.phone) && (
+                            <p className="text-xs text-destructive">
+                                Please enter a valid 9-digit phone number starting with 8 or 9
+                            </p>
+                        )}
+                    </div>
                      <div className="space-y-2">
-                        <Label htmlFor="new-client-address">Address</Label>
-                        <Input id="new-client-address" value={newClient.address} onChange={e => setNewClient({...newClient, address: e.target.value})} />
+                        <Label htmlFor="new-client-address">Address (Optional)</Label>
+                        <Input id="new-client-address" value={newClient.address || ''} onChange={e => setNewClient({...newClient, address: e.target.value})} />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="new-client-email">Client's Login Email (Optional)</Label>
@@ -437,7 +472,7 @@ export default function ClientList() {
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <Label>Set Location</Label>
+                    <Label>Set Location (Optional)</Label>
                     <div className="h-64 w-full rounded-md overflow-hidden relative">
                         <Map
                            initialViewState={{
@@ -460,7 +495,7 @@ export default function ClientList() {
             </div>
             <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddClientModalOpen(false)}>{t('cancel')}</Button>
-                <Button onClick={handleAddClient} disabled={!newClient.name || !newClient.address}>Add Client</Button>
+                <Button onClick={handleAddClient} disabled={!newClient.name || !newClient.phone}>Add Client</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

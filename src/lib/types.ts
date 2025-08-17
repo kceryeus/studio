@@ -5,7 +5,6 @@ export type PaymentStatus = 'paid' | 'due' | 'overdue';
 export type GarbageStatus = 'collected' | 'pending' | 'missed' | 'out' | 'not-out';
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 
-
 export type Payment = {
   id: string;
   date: string;
@@ -13,31 +12,78 @@ export type Payment = {
   status: 'paid';
 };
 
-export type Route = {
-    id: string;
-    name: string;
-    weekdays: DayOfWeek[];
-    path?: { lat: number, lng: number }[];
-    geometry?: any; // To store the full GeoJSON geometry from the directions API
+export type RoutePoint = {
+  id: string;
+  type: 'client' | 'unassociated';
+  coordinates: { lat: number; lng: number };
+  clientId?: string | null; // Associated client ID if type is 'client'
+  order: number; // Position in route sequence
+  estimatedTime?: number; // Estimated collection time in minutes
+  notes?: string;
 };
+
+export type CollectionTime = {
+  id: string;
+  time: string; // HH:mm format
+  estimatedDuration: number; // in minutes
+};
+
+export type Route = {
+  id: string;
+  name: string;
+  color: string; // Hex color for route visualization
+  weekdays: DayOfWeek[];
+  collectionTimes: CollectionTime[];
+  points: RoutePoint[];
+  totalDistance?: number; // in kilometers
+  estimatedDuration?: number; // in minutes
+  isActive: boolean;
+  providerId: string;
+  createdAt?: any;
+  updatedAt?: any;
+  // New routing fields for street-based routing (flattened for Firestore compatibility)
+  routingData?: {
+    // Store coordinates as flat arrays to avoid nested arrays
+    segmentCoordinates: string[]; // JSON stringified array of coordinate arrays
+    segmentDistances: number[]; // Array of distances in meters
+    segmentDurations: number[]; // Array of durations in seconds
+    totalDistance: number; // in meters
+    totalDuration: number; // in seconds
+    lastCalculated: any; // Timestamp
+  };
+};
+
+export interface Provider {
+  id: string;
+  name: string;
+  phone: string; // Required phone number for M-Pesa/e-Mola integration
+  email?: string | null;
+  address?: string | null;
+  businessType?: string | null;
+  subscriptionStatus: 'trial' | 'active' | 'expired';
+  subscriptionEndDate?: string | null;
+  createdAt?: any;
+  updatedAt?: any;
+}
 
 export interface Client {
   id: string;
   name: string;
-  address: string;
+  phone: string; // Required phone number for M-Pesa/e-Mola integration and sync
+  address?: string | null; // Made optional as per requirements
   email?: string | null;
-  coordinates: { lat: number; lng: number };
+  coordinates?: { lat: number; lng: number }; // Made optional for local management
   collectionStatus: CollectionStatus;
   paymentStatus: PaymentStatus;
   garbageStatus: GarbageStatus;
-  nextCollectionDate: string;
-  nextPaymentDueDate: string;
+  nextCollectionDate?: any | null; // Firestore Timestamp or null
+  nextPaymentDueDate?: any | null; // Firestore Timestamp or null
   paymentHistory: Payment[];
   balance: number;
   sharesLocation: boolean;
   routeId: string | null;
   providerId: string;
-  userId: string | null; // ID of the user with 'client' role
+  userId: string | null; // ID of the user with 'client' role - null means unlinked
   createdAt?: any;
   updatedAt?: any;
 }

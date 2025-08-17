@@ -20,11 +20,10 @@ import { format } from 'date-fns';
 import { ScrollArea } from '../ui/scroll-area';
 
 const VehicleStatusBadge = ({ status }: { status: 'in-use' | 'maintenance' | 'available' }) => {
-    const { t } = useLanguage();
     const text = {
-        'in-use': t('in_use'),
-        'maintenance': t('maintenance'),
-        'available': t('available'),
+        'in-use': 'In Use',
+        'maintenance': 'Maintenance',
+        'available': 'Available',
     }[status];
 
     const color = {
@@ -194,7 +193,7 @@ export default function FleetList({ vehicles: initialVehicles }: { vehicles: Veh
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="available">{t('available')}</SelectItem>
-                                <SelectItem value="in-use">{t('in_use')}</SelectItem>
+                                <SelectItem value="in-use">{t('in-use')}</SelectItem>
                                 <SelectItem value="maintenance">{t('maintenance')}</SelectItem>
                             </SelectContent>
                         </Select>
